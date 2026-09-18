@@ -1,0 +1,1266 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pulso Cambiario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f7f7f5;
+    --hero-bg: #0a0a0a;
+    --hero-ink: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #3d3d3a;
+    --muted: #767570;
+    --grid: #e7e6e1;
+    --border: rgba(10,10,10,0.14);
+    --rule: #0a0a0a;
+    --accent: #2a78d6;      /* TCO oficial */
+    --accent-ink: #184f95;
+    --series-paralelo: #eb6834;  /* USDT paralelo */
+    --series-avg: #8b95a3;       /* promedio sistema, de-enfatizado */
+    --band: rgba(42,120,214,0.12);
+    --forecast: #4a3aa7;
+    --netas-obl: #4a3aa7;
+    --good: #006300;
+    --bad: #b3261e;
+    --divisas: #2a78d6;
+    --oro: #eda100;
+    --deg: #1baf7a;
+    --ingreso: #1baf7a;
+    --egreso: #e34948;
+    --font-display: "Archivo", "IBM Plex Sans", system-ui, sans-serif;
+    --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg: #0d0f12;
+      --surface: #16191e;
+      --surface-2: #101318;
+      --hero-bg: #000000;
+      --hero-ink: #ffffff;
+      --ink: #f3f4f6;
+      --ink-2: #c3c8d1;
+      --muted: #8b93a1;
+      --grid: #262a31;
+      --border: rgba(255,255,255,0.14);
+      --rule: #f3f4f6;
+      --accent: #3987e5;
+      --accent-ink: #86b6ef;
+      --series-paralelo: #d95926;
+      --series-avg: #6b7280;
+      --band: rgba(57,135,229,0.16);
+      --forecast: #9085e9;
+      --netas-obl: #9085e9;
+      --good: #0ca30c;
+      --bad: #e66767;
+      --divisas: #3987e5;
+      --oro: #c98500;
+      --deg: #199e70;
+      --ingreso: #199e70;
+      --egreso: #e66767;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg: #0d0f12;
+    --surface: #16191e;
+    --surface-2: #101318;
+    --hero-bg: #000000;
+    --hero-ink: #ffffff;
+    --ink: #f3f4f6;
+    --ink-2: #c3c8d1;
+    --muted: #8b93a1;
+    --grid: #262a31;
+    --border: rgba(255,255,255,0.14);
+    --rule: #f3f4f6;
+    --accent: #3987e5;
+    --accent-ink: #86b6ef;
+    --series-paralelo: #d95926;
+    --series-avg: #6b7280;
+    --band: rgba(57,135,229,0.16);
+    --forecast: #9085e9;
+    --netas-obl: #9085e9;
+    --good: #0ca30c;
+    --bad: #e66767;
+    --divisas: #3987e5;
+    --oro: #c98500;
+    --deg: #199e70;
+    --ingreso: #199e70;
+    --egreso: #e66767;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    padding: 0;
+  }
+
+  .hero{
+    background: var(--hero-bg); color: var(--hero-ink);
+    padding: 22px 16px 24px;
+    padding-block: max(22px, env(safe-area-inset-top, 0px)) 24px;
+  }
+  .hero-inner{ max-width: 980px; margin: 0 auto; }
+  .hero-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family: var(--font-mono); font-size:11px; font-weight:500; letter-spacing:.08em; text-transform:uppercase;
+    color: rgba(255,255,255,0.62);
+  }
+  .eyebrow .dot{ width:7px; height:7px; border-radius:50%; background:#e3a900; flex:none; animation: pulse-dot 2.4s ease-in-out infinite; }
+  @keyframes pulse-dot{ 0%,100%{ box-shadow:0 0 0 0 rgba(227,169,0,0.35);} 50%{ box-shadow:0 0 0 5px rgba(227,169,0,0);} }
+  .asof{ font-family:var(--font-mono); font-size:11.5px; color:rgba(255,255,255,0.62); text-align:right; }
+  h1.title{
+    font-family: var(--font-display); font-weight:800; letter-spacing:-.01em;
+    font-size: clamp(34px,7vw,54px); line-height:0.98; margin: 14px 0 10px;
+    text-wrap: balance;
+  }
+  .hero-bar{ width:56px; height:4px; background:var(--accent); margin-bottom:12px; }
+  .hero p.dek{ margin:0; color:rgba(255,255,255,0.72); font-size:15px; max-width:62ch; line-height:1.5; }
+
+  /* ticker banner */
+  .ticker{ background:var(--surface); border-top:3px solid var(--ingreso); border-bottom:1px solid var(--border); overflow-x:auto; -webkit-overflow-scrolling:touch; -webkit-mask-image:linear-gradient(to right, black calc(100% - 28px), transparent); mask-image:linear-gradient(to right, black calc(100% - 28px), transparent); }
+  .ticker-inner{ max-width:980px; margin:0 auto; display:flex; padding:0 16px; width:max-content; min-width:100%; }
+  .ticker-item{ display:flex; align-items:baseline; gap:7px; padding:10px 18px 10px 0; margin-right:18px; border-right:1px solid var(--border); white-space:nowrap; font-family:var(--font-mono); }
+  .ticker-item:last-child{ border-right:none; margin-right:0; }
+  .ticker-item .t-label{ font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  .ticker-item .t-value{ font-size:14px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .ticker-item .t-value.accent{ color:var(--ingreso); }
+  .ticker-item .t-delta{ font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .ticker-item .t-delta.up{ color:var(--bad); }
+  .ticker-item .t-delta.down{ color:var(--good); }
+
+  /* spotlight figure */
+  .spotlight{ padding:24px 0 6px; border-bottom:1px solid var(--border); }
+  .spotlight-headline{ margin:0 0 18px; font-family:var(--font-ui); font-size:16.5px; font-weight:600; line-height:1.45; color:var(--ink); max-width:70ch; }
+  .spotlight-figure .s-label{ font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:6px; }
+  .spotlight-figure .s-row{ display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; }
+  .spotlight-figure .s-value{ font-family:var(--font-display); font-weight:800; font-size:clamp(46px,9vw,76px); line-height:0.92; letter-spacing:-0.01em; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .spotlight-figure .s-chip{ font-family:var(--font-mono); font-size:13px; font-weight:700; white-space:nowrap; }
+  .spotlight-figure .s-chip.up{ color:var(--bad); }
+  .spotlight-figure .s-chip.down{ color:var(--good); }
+  .spotlight-figure .s-context{ margin-top:8px; font-size:13px; color:var(--ink-2); }
+
+  /* scroll / entrance animations */
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .6s cubic-bezier(.2,.7,.3,1), transform .6s cubic-bezier(.2,.7,.3,1); }
+  .reveal.in-view{ opacity:1; transform:none; }
+  .reveal-top{ opacity:0; transform:translateY(-10px); transition:opacity .6s ease, transform .6s ease; }
+  .reveal-top.in-view{ opacity:1; transform:none; }
+
+  /* cascada: cada tarjeta/tile aparece con un pequeño desfase respecto a sus hermanas */
+  .stagger-item{ opacity:0; transform:translateY(10px); transition:opacity .5s cubic-bezier(.2,.7,.3,1), transform .5s cubic-bezier(.2,.7,.3,1); }
+  .reveal.in-view .stagger-item, .reveal-top.in-view .stagger-item{ opacity:1; transform:none; }
+
+  /* barrita de acento que se "dibuja" (ancho 0 -> completo) al entrar en pantalla */
+  .accent-draw{ display:inline-block; width:22px; height:3px; background:var(--ingreso); transform-origin:left center; transform:scaleX(0); transition:transform .5s cubic-bezier(.2,.7,.3,1) .08s; margin-right:9px; vertical-align:middle; flex:none; }
+  .reveal.in-view .accent-draw, .reveal-top.in-view .accent-draw{ transform:scaleX(1); }
+  .section-band .accent-draw{ background:#fff; }
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal, .reveal-top, .stagger-item, .accent-draw{ transition:none !important; opacity:1 !important; transform:none !important; }
+    svg.chart path{ transition:none !important; }
+    .eyebrow .dot{ animation:none; }
+  }
+
+  .wrap{ max-width: 980px; margin: 0 auto; display:flex; flex-direction:column; gap:28px; padding: 26px 16px 48px; }
+
+  section{ display:flex; flex-direction:column; gap:12px; }
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    border-bottom: 2px solid var(--rule); padding-bottom:8px; }
+  .section-head h2{
+    font-family: var(--font-display); font-size:19px; font-weight:700; margin:0; letter-spacing:-.005em;
+  }
+  .section-head .hint{ font-family: var(--font-mono); font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+  .sec-title{ display:flex; align-items:baseline; gap:9px; }
+  .sec-num{ font-family:var(--font-mono); font-size:12px; font-weight:600; color:var(--muted); }
+
+  .section-band{
+    background:var(--hero-bg); color:var(--hero-ink);
+    display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    padding:14px 16px;
+  }
+  .section-band .sec-num{ color:rgba(255,255,255,0.5); }
+  .section-band h2{ font-family: var(--font-display); font-size:19px; font-weight:700; margin:0; letter-spacing:-.005em; color:var(--hero-ink); }
+  .section-band .hint{ font-family: var(--font-mono); font-size:11px; color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:.03em; }
+
+  .card{
+    background: var(--surface); border:1px solid var(--border); border-radius:0;
+    padding:18px 16px;
+  }
+
+  /* KPI row -- ticker-strip style */
+  .kpis{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    border-top:1px solid var(--rule); border-left:1px solid var(--border);
+  }
+  .kpi{
+    background:var(--surface); border-bottom:1px solid var(--border); border-right:1px solid var(--border);
+    padding:14px 16px; display:flex; flex-direction:column; gap:6px;
+  }
+  .kpi .label{ font-family:var(--font-mono); font-size:10.5px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.05em; }
+  .kpi .value{ font-family:var(--font-mono); font-size:23px; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+  .kpi .value.accent{ color:var(--ingreso); }
+  .kpi .delta{ font-size:12px; font-weight:600; display:flex; align-items:center; gap:4px; font-variant-numeric:tabular-nums; }
+  .kpi .delta.up{ color:var(--bad); } /* boliviano depreciándose = tipo de cambio sube = malo para el que compra dólares */
+  .kpi .delta.down{ color:var(--good); }
+  .kpi .sub{ font-size:11px; color:var(--muted); }
+
+  /* controls */
+  .controls{ display:flex; flex-wrap:wrap; gap:0; }
+  .pill{
+    font-family:var(--font-mono); font-size:11.5px; font-weight:500; color:var(--ink-2);
+    background:var(--surface); border:1px solid var(--rule); border-radius:0;
+    padding:6px 13px; cursor:pointer; transition:background .1s,color .1s;
+    white-space:nowrap; text-transform:uppercase; letter-spacing:.03em;
+    margin-left:-1px;
+  }
+  .pill:hover{ background: var(--surface-2); }
+  .pill.active{ background:var(--rule); border-color:var(--rule); color:var(--bg); }
+  .pill.ghost.active{ background: var(--ink); color:var(--bg); border-color:var(--ink); }
+  .pill-sistema{ font-weight:700; border-color:var(--ingreso); margin-right:9px; }
+  .pill-sistema.active{ background:var(--ingreso); border-color:var(--ingreso); color:#fff; }
+
+  .bank-row{ display:flex; flex-wrap:wrap; gap:6px; }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:14px; font-size:12px; color:var(--ink-2); }
+  .footnote{ margin:10px 0 0; font-size:11.5px; color:var(--muted); line-height:1.5; }
+  .context-note{ margin:0; font-size:13.5px; line-height:1.55; color:var(--ink-2); max-width:74ch; }
+  .context-note.in-card{ margin:0 0 14px; }
+
+  .news-list{ display:flex; flex-direction:column; gap:16px; }
+  .news-item{ display:flex; gap:14px; padding-bottom:16px; border-bottom:1px solid var(--rule); text-decoration:none; color:inherit; }
+  .news-item:last-child{ border-bottom:none; padding-bottom:0; }
+  .news-thumb{ flex:none; width:112px; height:76px; overflow:hidden; background:var(--surface-2); }
+  .news-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .news-body{ flex:1; min-width:0; }
+  .news-title{ font-family:var(--font-display); font-weight:700; font-size:15px; color:var(--ink); line-height:1.35; }
+  .news-item:hover .news-title{ text-decoration:underline; }
+  .news-summary{ margin:5px 0 0; font-size:13px; color:var(--ink-2); line-height:1.5; }
+  .news-meta{ margin-top:7px; font-family:var(--font-mono); font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+  @media (max-width:520px){
+    .news-thumb{ width:84px; height:60px; }
+    .news-title{ font-size:14px; }
+  }
+  .legend .item{ display:flex; align-items:center; gap:6px; }
+  .legend .swatch{ width:10px; height:10px; border-radius:3px; flex:none; }
+  .legend .swatch.line{ height:2px; border-radius:1px; }
+
+  .chart-wrap{ position:relative; }
+  svg.chart{ display:block; width:100%; height:auto; overflow:visible; }
+  .chart-tooltip{
+    position:absolute; pointer-events:none; background:var(--ink); color:var(--surface);
+    font-family:var(--font-mono); font-size:11.5px; padding:7px 10px; border-radius:8px;
+    line-height:1.5; box-shadow:0 4px 14px rgba(0,0,0,.18); white-space:nowrap; z-index:5;
+    transform: translate(-50%,-115%); opacity:0; transition:opacity .08s;
+  }
+  .chart-tooltip.show{ opacity:1; }
+  .chart-tooltip .t-date{ color:var(--muted); font-size:10.5px; }
+
+  .bank-stats, .stat-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-top:2px; }
+  .bank-stats .kpi .value, .stat-row .kpi .value{ font-size:18px; }
+  .stat-row{ padding-bottom:14px; margin-bottom:14px; border-bottom:1px solid var(--border); }
+  .stat-row .kpi .label{ color:var(--ink-2); }
+
+  footer{ margin-top:8px; padding-top:14px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px; }
+  footer p{ margin:0; font-size:11.5px; color:var(--muted); line-height:1.6; }
+  footer .sources{ font-weight:600; color:var(--ink-2); }
+
+  @media (max-width:520px){
+    .kpis{ grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+<header class="hero reveal-top">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div class="eyebrow"><span class="dot"></span>Borrador · datos históricos, sin conexión en vivo</div>
+      <div class="asof" id="asof">— </div>
+    </div>
+    <div class="hero-bar"></div>
+    <h1 class="title">Pulso Cambiario</h1>
+    <p class="dek">Tipo de cambio oficial (TCO) del Banco Central de Bolivia (BCB), mercado paralelo y reservas internacionales, banco por banco.</p>
+  </div>
+</header>
+
+<div class="ticker reveal-top" id="tickerBar"></div>
+
+<div class="wrap">
+
+  <div class="spotlight reveal-top" id="spotlight">
+    <p class="spotlight-headline" id="spotlightHeadline"></p>
+    <div class="spotlight-figure">
+      <div class="s-label"><span class="accent-draw"></span>Brecha paralelo vs. TCO venta</div>
+      <div class="s-row">
+        <div class="s-value" id="spotlightValue">—</div>
+        <div id="spotlightChipWrap"></div>
+      </div>
+      <div class="s-context" id="spotlightContext"></div>
+    </div>
+  </div>
+
+  <section id="kpiSection" class="reveal">
+    <div class="kpis" id="kpiRow"></div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">01</span><h2>TCO oficial vs. mercado paralelo</h2></div>
+      <div class="controls" id="mainRangeCtl"></div>
+    </div>
+    <p class="context-note" id="ctxTco"></p>
+    <div class="card">
+      <div class="controls" style="margin-bottom:10px;">
+        <button class="pill ghost" id="toggleBands" data-active="0">Bandas GARCH</button>
+        <button class="pill ghost" id="toggleForecast" data-active="0">Pronóstico (5 días)</button>
+      </div>
+      <div class="chart-wrap" id="mainChart"></div>
+      <div class="legend" id="mainLegend" style="margin-top:8px;"></div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-band">
+      <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">02</span><h2>Tipo de cambio bancario por entidad</h2></div>
+      <span class="hint">Sistema financiero y por banco, referencial BCB</span>
+    </div>
+    <div class="card">
+      <p class="context-note in-card" id="ctxBanco"></p>
+      <div class="stat-row" id="bankSystemStats"></div>
+      <div class="bank-row" id="bankButtons"></div>
+      <div class="chart-wrap" id="bankChart" style="margin-top:14px;"></div>
+      <div class="legend" id="bankLegend" style="margin-top:8px;"></div>
+      <div class="bank-stats" id="bankStats"></div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">03</span><h2>Reservas internacionales del BCB</h2></div>
+      <div class="controls" id="reservasRangeCtl"></div>
+    </div>
+    <p class="context-note" id="ctxReservas"></p>
+    <div class="card">
+      <div class="chart-wrap" id="reservasChart"></div>
+      <div class="legend" id="reservasLegend" style="margin-top:8px;"></div>
+      <p class="footnote">La serie "netas de obligaciones" es la cifra oficial del BCB (resta convenios de crédito recíproco y pasivos por operaciones con oro) y se publica una vez al mes, con un mes de rezago. Las demás series son de mayor frecuencia.</p>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">04</span><h2>Balanza cambiaria mensual</h2></div>
+      <span class="hint">Ingreso y egreso de divisas, últimos 24 meses</span>
+    </div>
+    <p class="context-note" id="ctxBalanza"></p>
+    <div class="card">
+      <div class="stat-row" id="balanzaStats"></div>
+      <div class="chart-wrap" id="balanzaChart"></div>
+      <div class="legend" id="balanzaLegend" style="margin-top:8px;"></div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">05</span><h2>Índice de tipo de cambio real</h2></div>
+      <span class="hint">Base diciembre 2022 = 100</span>
+    </div>
+    <p class="context-note" id="ctxItcr"></p>
+    <div class="card">
+      <div class="stat-row" id="itcrStats"></div>
+      <div class="chart-wrap" id="itcrChart"></div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">06</span><h2>En la prensa</h2></div>
+      <span class="hint">Actualizado a diario</span>
+    </div>
+    <div class="card">
+      <div class="news-list" id="newsList"></div>
+      <p class="footnote" id="newsUpdated"></p>
+    </div>
+  </section>
+
+  <footer class="reveal">
+    <p class="sources">Fuentes: Banco Central de Bolivia (BCB), Binance (cotización de mercado paralelo USDT/BOB) y El Deber (titulares de economía).</p>
+    <p>Este tablero es un borrador de diseño construido sobre una base histórica compilada hasta el 17 de septiembre de 2026. Todavía no está conectado a una actualización diaria automática. Los datos de bandas GARCH y pronóstico son estimaciones estadísticas derivadas de la serie del TCO, no cifras publicadas por el BCB.</p>
+  </footer>
+
+</div>
+
+<div class="chart-tooltip" id="tooltip"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DATA = null;
+  var tooltipEl = document.getElementById('tooltip');
+  var fmtNum = new Intl.NumberFormat('es-BO', {minimumFractionDigits:2, maximumFractionDigits:2});
+  var fmtInt = new Intl.NumberFormat('es-BO', {maximumFractionDigits:0});
+  var fmtDate = function(iso){
+    var d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('es-BO', {day:'2-digit', month:'short', year:'numeric'});
+  };
+  var fmtDateShort = function(iso){
+    var d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('es-BO', {day:'2-digit', month:'short'});
+  };
+  var fmtMonthYear = function(iso){
+    var d = new Date(iso + 'T00:00:00');
+    var s = d.toLocaleDateString('es-BO', {month:'long', year:'numeric'});
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
+  function css(varName){
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  }
+
+  function filterFrom(series, fromDate){
+    if(!fromDate) return series;
+    return series.filter(function(d){ return d.date >= fromDate; });
+  }
+
+  function monthsAgo(iso, n){
+    var d = new Date(iso + 'T00:00:00');
+    d.setMonth(d.getMonth() - n);
+    return d.toISOString().slice(0,10);
+  }
+  function yearsAgo(iso, n){ return monthsAgo(iso, n*12); }
+  function daysAgo(iso, n){
+    var d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate() - n);
+    return d.toISOString().slice(0,10);
+  }
+
+  // ---------- generic SVG line/area chart ----------
+  function LineChart(container, opts){
+    this.container = (typeof container === 'string') ? document.getElementById(container) : container;
+    this.opts = opts; // {series:[{key,label,color,dashed,area,type:'line'|'band'}], data:[{date, k1, k2...}], height, yFormat}
+    this.render();
+    var self = this;
+    this._onResize = function(){ self.render(); };
+    window.addEventListener('resize', this._onResize);
+  }
+  LineChart.prototype.render = function(){
+    var el = this.container, opts = this.opts;
+    if(!el) return;
+    var width = el.clientWidth || 640;
+    var height = opts.height || 260;
+    var padL = 44, padR = 14, padT = 14, padB = 26;
+    var data = opts.data;
+    if(!data || !data.length){ el.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:20px 0;">Sin datos para este rango.</p>'; return; }
+
+    var allVals = [];
+    data.forEach(function(row){
+      opts.series.forEach(function(s){
+        if(row[s.key] != null) allVals.push(row[s.key]);
+        if(s.key2 && row[s.key2] != null) allVals.push(row[s.key2]);
+      });
+    });
+    var yMin = Math.min.apply(null, allVals), yMax = Math.max.apply(null, allVals);
+    if(opts.yMin != null) yMin = Math.min(yMin, opts.yMin);
+    if(opts.yMax != null) yMax = Math.max(yMax, opts.yMax);
+    var pad = (yMax - yMin) * 0.08 || 1;
+    yMin -= pad; yMax += pad;
+    if(opts.zeroBaseline){ yMin = Math.min(0, yMin); }
+
+    var n = data.length;
+    var x = function(i){ return padL + (n<=1?0:(i/(n-1)) * (width-padL-padR)); };
+    var y = function(v){ return padT + (height-padT-padB) * (1 - (v-yMin)/(yMax-yMin||1)); };
+
+    var svgParts = [];
+    svgParts.push('<svg class="chart" viewBox="0 0 '+width+' '+height+'" preserveAspectRatio="none" style="height:'+height+'px">');
+
+    // gridlines (4)
+    var ticks = 4;
+    for(var t=0;t<=ticks;t++){
+      var v = yMin + (yMax-yMin)*t/ticks;
+      var yy = y(v);
+      svgParts.push('<line x1="'+padL+'" y1="'+yy+'" x2="'+(width-padR)+'" y2="'+yy+'" stroke="var(--grid)" stroke-width="1"/>');
+      var label = opts.yFormat ? opts.yFormat(v) : v.toFixed(1);
+      svgParts.push('<text x="'+(padL-8)+'" y="'+(yy+3)+'" text-anchor="end" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">'+label+'</text>');
+    }
+
+    // x labels: first, middle, last
+    [0, Math.floor((n-1)/2), n-1].forEach(function(i){
+      if(i<0) return;
+      svgParts.push('<text x="'+x(i)+'" y="'+(height-6)+'" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">'+fmtDateShort(data[i].date)+'</text>');
+    });
+
+    // bands first (so lines draw on top)
+    opts.series.filter(function(s){return s.type==='band';}).forEach(function(s){
+      var pts = [];
+      for(var i=0;i<n;i++){ if(data[i][s.key]!=null) pts.push([x(i), y(data[i][s.key])]); }
+      var pts2 = [];
+      for(var i2=n-1;i2>=0;i2--){ if(data[i2][s.key2]!=null) pts2.push([x(i2), y(data[i2][s.key2])]); }
+      if(pts.length && pts2.length){
+        var d = 'M' + pts.map(function(p){return p[0]+','+p[1];}).join('L') + 'L' + pts2.map(function(p){return p[0]+','+p[1];}).join('L') + 'Z';
+        svgParts.push('<path d="'+d+'" fill="'+s.color+'" stroke="none"/>');
+      }
+    });
+
+    // area fills (single key, to baseline)
+    opts.series.filter(function(s){return s.area && s.type!=='band';}).forEach(function(s){
+      var pts = [];
+      for(var i=0;i<n;i++){ if(data[i][s.key]!=null) pts.push([x(i), y(data[i][s.key])]); }
+      if(pts.length){
+        var baseline = y(yMin);
+        var d = 'M'+pts[0][0]+','+baseline+' L'+pts.map(function(p){return p[0]+','+p[1];}).join(' L')+' L'+pts[pts.length-1][0]+','+baseline+' Z';
+        svgParts.push('<path d="'+d+'" fill="'+s.color+'" opacity="0.14" stroke="none"/>');
+      }
+    });
+
+    // lines
+    var lineSeries = opts.series.filter(function(s){return !s.type || s.type==='line';});
+    lineSeries.forEach(function(s){
+      var segs = [], cur = [];
+      for(var i=0;i<n;i++){
+        var v = data[i][s.key];
+        if(v==null){ if(cur.length){segs.push(cur); cur=[];} continue; }
+        cur.push([x(i), y(v)]);
+      }
+      if(cur.length) segs.push(cur);
+      segs.forEach(function(pts){
+        var d = 'M'+pts.map(function(p){return p[0]+','+p[1];}).join('L');
+        svgParts.push('<path d="'+d+'" fill="none" stroke="'+s.color+'" stroke-width="'+(s.width||2)+'" stroke-dasharray="'+(s.dashed?'5,4':'none')+'" stroke-linejoin="round" stroke-linecap="round"/>');
+      });
+      // endpoint dot
+      var last = null;
+      for(var j=n-1;j>=0;j--){ if(data[j][s.key]!=null){ last=[x(j), y(data[j][s.key])]; break; } }
+      if(last && opts.endpointDots!==false){
+        svgParts.push('<circle cx="'+last[0]+'" cy="'+last[1]+'" r="3.5" fill="'+s.color+'"/>');
+      }
+    });
+
+    // hover capture
+    svgParts.push('<rect x="'+padL+'" y="'+padT+'" width="'+(width-padL-padR)+'" height="'+(height-padT-padB)+'" fill="transparent" class="hover-rect" />');
+
+    svgParts.push('</svg>');
+    el.innerHTML = svgParts.join('');
+
+    var svgEl = el.querySelector('svg');
+    if(!prefersReducedMotion){ animateLineDrawIn(svgEl); }
+    var hoverRect = el.querySelector('.hover-rect');
+    var self2 = this;
+    if(hoverRect){
+      hoverRect.addEventListener('mousemove', function(evt){
+        var rect = svgEl.getBoundingClientRect();
+        var scaleX = width / rect.width;
+        var mx = (evt.clientX - rect.left) * scaleX;
+        var idx = Math.round(((mx-padL) / (width-padL-padR)) * (n-1));
+        idx = Math.max(0, Math.min(n-1, idx));
+        self2.showTooltip(idx, x(idx), rect);
+      });
+      hoverRect.addEventListener('mouseleave', function(){ tooltipEl.classList.remove('show'); });
+    }
+    this._x = x; this._n = n; this._data = data;
+  };
+  LineChart.prototype.showTooltip = function(idx, xpx, rectPx){
+    var opts = this.opts, data = this.opts.data, row = data[idx];
+    var lines = [ '<div class="t-date">'+fmtDate(row.date)+'</div>' ];
+    opts.series.filter(function(s){return s.tooltip!==false;}).forEach(function(s){
+      var v = row[s.key];
+      if(v==null) return;
+      var txt = opts.yFormat ? opts.yFormat(v) : v.toFixed(2);
+      lines.push('<div>'+s.label+': <strong>'+txt+'</strong></div>');
+    });
+    tooltipEl.innerHTML = lines.join('');
+    var elRect = this.container.getBoundingClientRect();
+    var relX = (xpx / (this.container.querySelector('svg').viewBox.baseVal.width)) * elRect.width;
+    tooltipEl.style.left = relX + 'px';
+    tooltipEl.style.top = '0px';
+    tooltipEl.classList.add('show');
+  };
+
+  function animateLineDrawIn(svgEl){
+    if(!svgEl) return;
+    var paths = svgEl.querySelectorAll('path[fill="none"]');
+    paths.forEach(function(p){
+      try{
+        var len = p.getTotalLength();
+        if(!len) return;
+        p.style.transition = 'none';
+        p.style.strokeDasharray = len;
+        p.style.strokeDashoffset = len;
+        p.getBoundingClientRect(); // fuerza reflow
+        p.style.transition = 'stroke-dashoffset .7s cubic-bezier(.2,.7,.3,1)';
+        requestAnimationFrame(function(){ p.style.strokeDashoffset = '0'; });
+        setTimeout(function(){
+          // restaura el patrón de trazo original (por ejemplo, líneas punteadas) que el draw-in pisó temporalmente
+          p.style.transition = '';
+          p.style.strokeDasharray = '';
+          p.style.strokeDashoffset = '';
+        }, 760);
+      }catch(e){ /* getTotalLength puede fallar si el path está oculto; se ignora */ }
+    });
+  }
+
+  // ---------- diverging bar chart for balanza cambiaria ----------
+  function drawDivergingBars(containerId, data){
+    var el = document.getElementById(containerId);
+    var width = el.clientWidth || 640, height = 260;
+    var padL = 50, padR = 14, padT = 14, padB = 26;
+    var maxAbs = 0;
+    data.forEach(function(d){ maxAbs = Math.max(maxAbs, Math.abs(d.ingreso||0), Math.abs(d.egreso||0)); });
+    maxAbs *= 1.1;
+    var n = data.length;
+    var bw = (width-padL-padR)/n;
+    var yZero = padT + (height-padT-padB)/2;
+    var scale = ((height-padT-padB)/2) / (maxAbs||1);
+    var parts = ['<svg class="chart" viewBox="0 0 '+width+' '+height+'" style="height:'+height+'px">'];
+    parts.push('<line x1="'+padL+'" y1="'+yZero+'" x2="'+(width-padR)+'" y2="'+yZero+'" stroke="var(--baseline,var(--grid))" stroke-width="1.2"/>');
+    [1,-1].forEach(function(sign){
+      var v = maxAbs*0.66*sign;
+      var yy = yZero - v*scale;
+      parts.push('<line x1="'+padL+'" y1="'+yy+'" x2="'+(width-padR)+'" y2="'+yy+'" stroke="var(--grid)" stroke-width="1"/>');
+      parts.push('<text x="'+(padL-8)+'" y="'+(yy+3)+'" text-anchor="end" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">'+Math.round(Math.abs(v))+'</text>');
+    });
+    data.forEach(function(d, i){
+      var cx = padL + i*bw + bw/2;
+      var w = Math.max(bw*0.55, 2);
+      if(d.ingreso!=null){
+        var h1 = d.ingreso*scale;
+        var y1 = prefersReducedMotion ? (yZero-h1) : yZero;
+        var hh1 = prefersReducedMotion ? h1 : 0;
+        parts.push('<rect class="bar-grow" data-fy="'+(yZero-h1)+'" data-fh="'+h1+'" x="'+(cx-w/2)+'" y="'+y1+'" width="'+w+'" height="'+hh1+'" rx="2" fill="var(--ingreso)" style="transition:height .6s cubic-bezier(.2,.7,.3,1), y .6s cubic-bezier(.2,.7,.3,1)"/>');
+      }
+      if(d.egreso!=null){
+        var h2 = Math.abs(d.egreso)*scale;
+        var hh2 = prefersReducedMotion ? h2 : 0;
+        parts.push('<rect class="bar-grow" data-fy="'+yZero+'" data-fh="'+h2+'" x="'+(cx-w/2)+'" y="'+yZero+'" width="'+w+'" height="'+hh2+'" rx="2" fill="var(--egreso)" style="transition:height .6s cubic-bezier(.2,.7,.3,1), y .6s cubic-bezier(.2,.7,.3,1)"/>');
+      }
+    });
+    [0, Math.floor((n-1)/2), n-1].forEach(function(i){
+      if(i<0) return;
+      var cx = padL + i*bw + bw/2;
+      var d = new Date(data[i].date+'T00:00:00');
+      parts.push('<text x="'+cx+'" y="'+(height-6)+'" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">'+d.toLocaleDateString('es-BO',{month:'short',year:'2-digit'})+'</text>');
+    });
+    parts.push('</svg>');
+    el.innerHTML = parts.join('');
+    if(!prefersReducedMotion){
+      requestAnimationFrame(function(){
+        el.querySelectorAll('.bar-grow').forEach(function(r){
+          r.setAttribute('y', r.getAttribute('data-fy'));
+          r.setAttribute('height', r.getAttribute('data-fh'));
+        });
+      });
+    }
+  }
+
+  function legendItem(color, label, dashed){
+    return '<span class="item"><span class="swatch '+(dashed?'line':'')+'" style="background:'+(dashed?'none':color)+';border-bottom:'+(dashed?'2px dashed '+color:'none')+'"></span>'+label+'</span>';
+  }
+
+  function statTile(s){
+    var deltaHtml = '';
+    if(s.delta != null && Math.abs(s.delta) > 0.0001){
+      var up = s.delta > 0;
+      deltaHtml = '<div class="delta '+(up?'up':'down')+'">'+(up?'▲':'▼')+' '+fmtNum.format(Math.abs(s.delta))+' vs. día anterior</div>';
+    }
+    return '<div class="kpi stagger-item"><div class="label">'+s.label+'</div><div class="value'+(s.accent?' accent':'')+'">'+s.value+'</div>'+deltaHtml+(s.sub?'<div class="sub">'+s.sub+'</div>':'')+'</div>';
+  }
+
+  var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function animateNumber(el, target, opts){
+    if(!el) return;
+    opts = opts || {};
+    var decimals = opts.decimals != null ? opts.decimals : 1;
+    var suffix = opts.suffix || '';
+    var signed = !!opts.signed;
+    function fmt(v){
+      var txt = v.toFixed(decimals).replace('.',',');
+      if(signed && v >= 0) txt = '+'+txt;
+      return txt+suffix;
+    }
+    if(prefersReducedMotion){ el.textContent = fmt(target); return; }
+    var duration = opts.duration || 900;
+    var startTime = null;
+    function easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
+    function frame(ts){
+      if(!startTime) startTime = ts;
+      var p = Math.min(1, (ts-startTime)/duration);
+      el.textContent = fmt(target*easeOutCubic(p));
+      if(p < 1) requestAnimationFrame(frame); else el.textContent = fmt(target);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function applyStagger(container, stepMs){
+    if(!container) return;
+    var children = container.children;
+    for(var i=0;i<children.length;i++){
+      children[i].style.transitionDelay = (i*(stepMs||70))+'ms';
+    }
+  }
+
+  // ================= sections =================
+
+  function renderKPIs(){
+    var tco = DATA.tco, usdt = DATA.usdt, res = DATA.reservas;
+    var lastTco = tco[tco.length-1], prevTco = tco[tco.length-2] || lastTco;
+    var lastUsdt = usdt[usdt.length-1];
+    var lastRes = res[res.length-1];
+    var deltaCompra = lastTco.tco_compra_bcb - prevTco.tco_compra_bcb;
+
+    var fc = DATA.forecast[DATA.forecast.length-1];
+
+    var items = [
+      {label:'TCO compra BCB', value: fmtNum.format(lastTco.tco_compra_bcb), sub: fmtDate(lastTco.date), delta: deltaCompra},
+      {label:'TCO venta BCB', value: fmtNum.format(lastTco.tco_venta_bcb), sub: fmtDate(lastTco.date)},
+      {label:'USDT/BOB paralelo', value: fmtNum.format(lastUsdt.usdt_bob), sub: fmtDate(lastUsdt.date), accent:true},
+      {label:'Reservas brutas BCB', value: fmtInt.format(lastRes.neta)+' M', sub:'USD · '+fmtDate(lastRes.date), accent:true},
+    ];
+    if(fc){ items.push({label:'Pronóstico TCO ('+fmtDateShort(fc.date)+')', value: fmtNum.format(fc.forecast), sub:'P10 '+fmtNum.format(fc.p10)+' · P90 '+fmtNum.format(fc.p90)}); }
+
+    var kpiRowEl = document.getElementById('kpiRow');
+    kpiRowEl.innerHTML = items.map(statTile).join('');
+    applyStagger(kpiRowEl, 60);
+
+    document.getElementById('asof').textContent = 'Corte: ' + fmtDate(DATA.meta.asof);
+    renderTicker(items);
+  }
+
+  function renderTicker(items){
+    var el = document.getElementById('tickerBar');
+    if(!el) return;
+    var html = items.map(function(it){
+      var deltaHtml = '';
+      if(it.delta != null && Math.abs(it.delta) > 0.0001){
+        var up = it.delta > 0;
+        deltaHtml = '<span class="t-delta '+(up?'up':'down')+'">'+(up?'▲':'▼')+fmtNum.format(Math.abs(it.delta))+'</span>';
+      }
+      return '<div class="ticker-item"><span class="t-label">'+it.label+'</span><span class="t-value'+(it.accent?' accent':'')+'">'+it.value+'</span>'+deltaHtml+'</div>';
+    }).join('');
+    el.innerHTML = '<div class="ticker-inner">'+html+'</div>';
+  }
+
+  function findOnOrBefore(series, dateField, targetDate){
+    var res = null;
+    for(var i=0;i<series.length;i++){
+      if(series[i][dateField] <= targetDate){ res = series[i]; } else { break; }
+    }
+    return res;
+  }
+
+  function renderSpotlight(){
+    var headlineEl = document.getElementById('spotlightHeadline');
+    if(!headlineEl) return;
+    var tco = DATA.tco, usdt = DATA.usdt;
+    var lastTco = tco[tco.length-1], prevTco = tco[tco.length-2] || lastTco;
+    var lastUsdt = usdt[usdt.length-1];
+    var brecha = ((lastUsdt.usdt_bob - lastTco.tco_venta_bcb) / lastTco.tco_venta_bcb) * 100;
+    var brechaBs = lastUsdt.usdt_bob - lastTco.tco_venta_bcb;
+    var deltaCompra = lastTco.tco_compra_bcb - prevTco.tco_compra_bcb;
+
+    var chipHtml = '';
+    var target7 = daysAgo(lastUsdt.date, 7);
+    var tcoPrev = findOnOrBefore(tco, 'date', target7);
+    var usdtPrev = findOnOrBefore(usdt, 'date', target7);
+    if(tcoPrev && usdtPrev && tcoPrev.tco_venta_bcb != null && usdtPrev.usdt_bob != null){
+      var brechaBsPrev = usdtPrev.usdt_bob - tcoPrev.tco_venta_bcb;
+      var deltaBrechaBs = brechaBs - brechaBsPrev;
+      if(Math.abs(deltaBrechaBs) > 0.0001){
+        var widening = deltaBrechaBs > 0;
+        chipHtml = '<div class="s-chip '+(widening?'up':'down')+'">'+(widening?'▲':'▼')+' '+fmtNum.format(Math.abs(deltaBrechaBs))+' Bs vs. hace 7 días</div>';
+      }
+    }
+
+    var dirWord = deltaCompra > 0.0001 ? 'sube' : (deltaCompra < -0.0001 ? 'retrocede' : 'se mantiene estable');
+    var headline = 'El dólar paralelo cotiza '+brecha.toFixed(1).replace('.',',')+'% por encima del tipo de cambio oficial de venta';
+    if(Math.abs(deltaCompra) > 0.0001){
+      headline += ', mientras el TCO compra '+dirWord+' '+fmtNum.format(Math.abs(deltaCompra))+' Bs frente al día anterior';
+    }
+    headline += '.';
+
+    headlineEl.textContent = headline;
+    animateNumber(document.getElementById('spotlightValue'), brecha, {decimals:1, suffix:'%', signed:true, duration:900});
+    document.getElementById('spotlightChipWrap').innerHTML = chipHtml;
+    document.getElementById('spotlightContext').textContent = 'USDT/BOB '+fmtNum.format(lastUsdt.usdt_bob)+' · TCO venta '+fmtNum.format(lastTco.tco_venta_bcb)+' · '+fmtDate(lastTco.date);
+  }
+
+  // ---------- contexto editorial automático, por sección ----------
+  function renderContextTco(){
+    var el = document.getElementById('ctxTco');
+    if(!el) return;
+    var tco = DATA.tco;
+    var last = tco[tco.length-1];
+    var spread = last.tco_venta_bcb - last.tco_compra_bcb;
+    var target30 = daysAgo(last.date, 30);
+    var prev30 = findOnOrBefore(tco, 'date', target30);
+    var txt = 'El spread oficial compra-venta del BCB se mantiene en '+fmtNum.format(spread)+' Bs.';
+    if(prev30 && prev30.tco_compra_bcb != null){
+      var chg = last.tco_compra_bcb - prev30.tco_compra_bcb;
+      if(Math.abs(chg) > 0.0001){
+        var pct = (chg/prev30.tco_compra_bcb)*100;
+        var dir = chg > 0 ? 'subió' : 'bajó';
+        txt = 'En los últimos 30 días el TCO compra '+dir+' '+fmtNum.format(Math.abs(chg))+' Bs ('+(pct>=0?'+':'')+pct.toFixed(1).replace('.',',')+'%). '+txt;
+      } else {
+        txt = 'En los últimos 30 días el TCO oficial se mantuvo estable. '+txt;
+      }
+    }
+    el.textContent = txt;
+  }
+
+  function renderContextBanco(){
+    var el = document.getElementById('ctxBanco');
+    if(!el) return;
+    var names = DATA.bank_names;
+    var lastDate = null;
+    names.forEach(function(n){
+      var s = DATA.banks[n] || [];
+      var d = s.length ? s[s.length-1].date : null;
+      if(d && (!lastDate || d > lastDate)) lastDate = d;
+    });
+    if(!lastDate) return;
+    var today = [];
+    names.forEach(function(n){
+      var s = DATA.banks[n] || [];
+      var last = s.length ? s[s.length-1] : null;
+      if(last && last.date === lastDate && last.rate != null){
+        today.push({name:n.replace('Banco ',''), rate:last.rate});
+      }
+    });
+    if(today.length < 2) return;
+    today.sort(function(a,b){ return b.rate - a.rate; });
+    var top = today[0], bottom = today[today.length-1];
+    var disp = top.rate - bottom.rate;
+    var target30 = daysAgo(lastDate, 30);
+    var prevRates = [];
+    names.forEach(function(n){
+      var row = findOnOrBefore(DATA.banks[n] || [], 'date', target30);
+      if(row && row.rate != null) prevRates.push(row.rate);
+    });
+    var txt = top.name+' ofrece hoy la mejor tasa de compra ('+fmtNum.format(top.rate)+' Bs), con una dispersión de '+fmtNum.format(disp)+' Bs frente a '+bottom.name+'.';
+    if(prevRates.length > 1){
+      var dispPrev = Math.max.apply(null, prevRates) - Math.min.apply(null, prevRates);
+      if(Math.abs(disp-dispPrev) > 0.001){
+        var dir = disp > dispPrev ? 'se amplió' : 'se redujo';
+        txt += ' La dispersión bancaria '+dir+' frente a hace 30 días ('+fmtNum.format(dispPrev)+' Bs).';
+      }
+    }
+    el.textContent = txt;
+  }
+
+  function renderContextReservas(){
+    var el = document.getElementById('ctxReservas');
+    if(!el) return;
+    var withNeta = DATA.reservas.filter(function(d){ return d.neta != null; });
+    if(!withNeta.length) return;
+    var last = withNeta[withNeta.length-1];
+    var target12m = yearsAgo(last.date, 1);
+    var prev12 = findOnOrBefore(withNeta, 'date', target12m);
+    var txt = 'Las reservas brutas del BCB suman '+fmtInt.format(last.neta)+' millones de USD a '+fmtMonthYear(last.date)+'.';
+    if(prev12 && prev12.neta != null){
+      var chg = last.neta - prev12.neta;
+      if(Math.abs(chg) > 0.001){
+        var pct = (chg/prev12.neta)*100;
+        var dir = chg >= 0 ? 'aumentaron' : 'cayeron';
+        txt += ' En los últimos 12 meses '+dir+' '+fmtInt.format(Math.abs(chg))+' millones ('+(pct>=0?'+':'')+pct.toFixed(1).replace('.',',')+'%).';
+      }
+    }
+    if(last.netas_obligaciones != null){
+      var gap = last.neta - last.netas_obligaciones;
+      txt += ' Descontando obligaciones (convenio de crédito recíproco y pasivos por operaciones con oro), la cifra oficial neta es de '+fmtInt.format(last.netas_obligaciones)+' millones — '+fmtInt.format(gap)+' millones por debajo de la bruta.';
+    }
+    el.textContent = txt;
+  }
+
+  function renderContextBalanza(){
+    var el = document.getElementById('ctxBalanza');
+    if(!el) return;
+    var withFlujo = DATA.balanza.filter(function(d){ return d.flujo != null; });
+    if(!withFlujo.length) return;
+    var lastM = withFlujo[withFlujo.length-1];
+    var last12 = withFlujo.slice(-12);
+    var cum12 = last12.reduce(function(a,d){ return a+d.flujo; }, 0);
+    var monthWord = lastM.flujo >= 0 ? 'superávit' : 'déficit';
+    var cumWord = cum12 >= 0 ? 'superávit acumulado' : 'déficit acumulado';
+    el.textContent = fmtMonthYear(lastM.date)+' cerró con un '+monthWord+' de '+fmtInt.format(Math.abs(lastM.flujo))+' millones de USD en la balanza cambiaria. En los últimos 12 meses el '+cumWord+' es de '+fmtInt.format(Math.abs(cum12))+' millones.';
+  }
+
+  function renderContextItcr(){
+    var el = document.getElementById('ctxItcr');
+    if(!el) return;
+    var rows = DATA.itcr.filter(function(d){ return d.value != null; });
+    if(!rows.length) return;
+    var last = rows[rows.length-1];
+    var maxRow = rows.reduce(function(a,d){ return (!a || d.value>a.value) ? d : a; }, null);
+    var dev = last.value - 100;
+    var txt = 'El índice de tipo de cambio real se ubica en '+last.value.toFixed(1).replace('.',',')+' ('+(dev>=0?'+':'')+dev.toFixed(1).replace('.',',')+'% respecto a la base de diciembre 2022).';
+    if(maxRow && maxRow.date !== last.date){
+      var devMax = (last.value-maxRow.value)/maxRow.value*100;
+      txt += ' Está '+(devMax>=0?'+':'')+devMax.toFixed(1).replace('.',',')+'% respecto a su máximo histórico ('+maxRow.value.toFixed(1).replace('.',',')+', en '+new Date(maxRow.date+'T00:00:00').getFullYear()+').';
+    }
+    el.textContent = txt;
+  }
+
+  var mainChart, mainRangeFrom = null, showBands=false, showForecast=false;
+  function buildMainRows(){
+    var tcoRows = filterFrom(DATA.tco, mainRangeFrom);
+    var usdtByDate = {}; DATA.usdt.forEach(function(d){ usdtByDate[d.date]=d.usdt_bob; });
+    var garchByDate = {}; DATA.garch.forEach(function(d){ garchByDate[d.date]=d; });
+    var rows = tcoRows.map(function(d){
+      var row = {date:d.date, tco_compra_bcb:d.tco_compra_bcb, tco_venta_bcb:d.tco_venta_bcb, usdt_bob: usdtByDate[d.date]};
+      if(showBands && garchByDate[d.date]){
+        var g = garchByDate[d.date];
+        row.g_lo2 = g.lo2; row.g_hi2 = g.hi2; row.g_lo1 = g.lo1; row.g_hi1 = g.hi1;
+      }
+      return row;
+    });
+    if(showForecast){
+      DATA.forecast.forEach(function(f){
+        rows.push({date:f.date, forecast:f.forecast, fc_lo:f.p10, fc_hi:f.p90});
+      });
+    }
+    return rows;
+  }
+  function renderMainChart(){
+    var series = [];
+    if(showBands){
+      series.push({key:'g_lo2', key2:'g_hi2', type:'band', color:'var(--band)'});
+    }
+    series.push({key:'tco_compra_bcb', label:'TCO compra BCB', color:'var(--accent)', width:2.25});
+    series.push({key:'tco_venta_bcb', label:'TCO venta BCB', color:'var(--accent-ink)', width:1.5, dashed:true});
+    series.push({key:'usdt_bob', label:'USDT/BOB paralelo', color:'var(--series-paralelo)', width:2});
+    if(showForecast){
+      series.push({key:'forecast', label:'Pronóstico TCO compra', color:'var(--forecast)', width:2, dashed:true});
+    }
+    var rows = buildMainRows();
+    if(!mainChart){
+      mainChart = new LineChart('mainChart', {series:series, data:rows, height:280, yFormat:function(v){return v.toFixed(2);}});
+    } else {
+      mainChart.opts.series = series; mainChart.opts.data = rows; mainChart.render();
+    }
+    var legend = [
+      legendItem('var(--accent)','TCO compra BCB'),
+      legendItem('var(--accent-ink)','TCO venta BCB', true),
+      legendItem('var(--series-paralelo)','USDT/BOB paralelo'),
+    ];
+    if(showBands) legend.push(legendItem('var(--band)','Banda GARCH (±2σ)'));
+    if(showForecast) legend.push(legendItem('var(--forecast)','Pronóstico TimesFM', true));
+    document.getElementById('mainLegend').innerHTML = legend.join('');
+  }
+
+  function setupMainControls(){
+    var asof = DATA.meta.asof;
+    var ranges = [
+      {label:'10 días', from: daysAgo(asof,10)},
+      {label:'30 días', from: daysAgo(asof,30)},
+      {label:'90 días', from: monthsAgo(asof,3)},
+      {label:'1 año', from: yearsAgo(asof,1)},
+      {label:'Todo', from: null},
+    ];
+    var ctl = document.getElementById('mainRangeCtl');
+    ctl.innerHTML = ranges.map(function(r,i){ return '<button class="pill" data-i="'+i+'">'+r.label+'</button>'; }).join('');
+    var btns = ctl.querySelectorAll('.pill');
+    function setActive(i){
+      btns.forEach(function(b,bi){ b.classList.toggle('active', bi===i); });
+      mainRangeFrom = ranges[i].from;
+      renderMainChart();
+    }
+    btns.forEach(function(b,i){ b.addEventListener('click', function(){ setActive(i); }); });
+    setActive(2);
+
+    document.getElementById('toggleBands').addEventListener('click', function(){
+      showBands = !showBands;
+      this.classList.toggle('active', showBands);
+      renderMainChart();
+    });
+    document.getElementById('toggleForecast').addEventListener('click', function(){
+      showForecast = !showForecast;
+      this.classList.toggle('active', showForecast);
+      renderMainChart();
+    });
+  }
+
+  var SISTEMA_KEY = '__SISTEMA__', SISTEMA_LABEL = 'Sistema financiero';
+  var bankChart, selectedBank = SISTEMA_KEY;
+  function getBankSeries(key){
+    if(key === SISTEMA_KEY){ return DATA.aggregates['Bancos (promedio ponderado)'] || []; }
+    return DATA.banks[key] || [];
+  }
+  function renderBankSystemStats(){
+    var el = document.getElementById('bankSystemStats');
+    if(!el) return;
+    var names = DATA.bank_names;
+    var lastDate = null;
+    names.forEach(function(n){
+      var s = DATA.banks[n] || [];
+      var d = s.length ? s[s.length-1].date : null;
+      if(d && (!lastDate || d > lastDate)) lastDate = d;
+    });
+    var today = [];
+    names.forEach(function(n){
+      var s = DATA.banks[n] || [];
+      var last = s.length ? s[s.length-1] : null;
+      if(last && last.date === lastDate && last.rate != null){
+        today.push({name:n.replace('Banco ',''), rate:last.rate});
+      }
+    });
+    var stats = [];
+    if(today.length){
+      today.sort(function(a,b){ return b.rate - a.rate; });
+      var top = today[0], bottom = today[today.length-1];
+      stats.push({label:'Banco líder hoy', value: fmtNum.format(top.rate), sub: top.name+' · '+fmtDate(lastDate), accent:true});
+      stats.push({label:'Dispersión bancaria', value: fmtNum.format(top.rate-bottom.rate)+' Bs', sub: top.name+' vs. '+bottom.name});
+    }
+    var montoAgg = DATA.aggregates['Bancos (montos totales)'] || [];
+    if(montoAgg.length){
+      var ytd = montoAgg.filter(function(d){ return d.date >= '2026-01-01' && d.monto != null; })
+                         .reduce(function(a,d){ return a+d.monto; }, 0);
+      stats.push({label:'Monto acumulado 2026', value:'$us '+fmtInt.format(ytd), sub:'Desde el 1 de enero'});
+      var window20 = montoAgg.slice(-20).map(function(d){ return d.monto; }).filter(function(v){ return v!=null; });
+      if(window20.length){
+        var avg20 = window20.reduce(function(a,v){ return a+v; },0)/window20.length;
+        stats.push({label:'Promedio móvil (20 días)', value:'$us '+fmtInt.format(avg20), sub:'Monto diario negociado'});
+      }
+    }
+    el.innerHTML = stats.map(statTile).join('');
+    applyStagger(el, 70);
+  }
+
+  function renderBankSection(){
+    var btnRow = document.getElementById('bankButtons');
+    var names = DATA.bank_names;
+    var opts = [{key:SISTEMA_KEY, label:SISTEMA_LABEL, sistema:true}].concat(names.map(function(n){
+      return {key:n, label:n.replace('Banco ','')};
+    }));
+    btnRow.innerHTML = opts.map(function(o){
+      return '<button class="pill'+(o.sistema?' pill-sistema':'')+(o.key===selectedBank?' active':'')+'" data-bank="'+o.key+'">'+o.label+'</button>';
+    }).join('');
+    btnRow.querySelectorAll('.pill').forEach(function(b){
+      b.addEventListener('click', function(){
+        selectedBank = b.getAttribute('data-bank');
+        btnRow.querySelectorAll('.pill').forEach(function(x){ x.classList.toggle('active', x===b); });
+        renderBankChart();
+      });
+    });
+    renderBankChart();
+  }
+  function renderBankChart(){
+    var isSistema = selectedBank === SISTEMA_KEY;
+    var avgSeries = DATA.aggregates['Bancos (promedio ponderado)'] || [];
+    var avgByDate = {}; avgSeries.forEach(function(d){ avgByDate[d.date]=d.rate; });
+    var bankSeries = getBankSeries(selectedBank);
+    var label = isSistema ? SISTEMA_LABEL+' (promedio ponderado)' : selectedBank;
+    var rows, series;
+    if(isSistema){
+      rows = bankSeries.map(function(d){ return {date:d.date, rate:d.rate}; });
+      series = [
+        {key:'rate', label:label, color:'var(--ingreso)', width:2.25},
+      ];
+    } else {
+      rows = bankSeries.map(function(d){ return {date:d.date, rate:d.rate, avg:avgByDate[d.date]}; });
+      series = [
+        {key:'avg', label:'Promedio sistema', color:'var(--series-avg)', width:1.5, dashed:true, tooltip:true},
+        {key:'rate', label:label, color:'var(--accent)', width:2.25},
+      ];
+    }
+    if(!bankChart){
+      bankChart = new LineChart('bankChart', {series:series, data:rows, height:240, yFormat:function(v){return v.toFixed(2);}});
+    } else {
+      bankChart.opts.series = series; bankChart.opts.data = rows; bankChart.render();
+    }
+    document.getElementById('bankLegend').innerHTML = isSistema ? [
+      legendItem('var(--ingreso)', label),
+    ].join('') : [
+      legendItem('var(--accent)', label),
+      legendItem('var(--series-avg)', 'Promedio sistema', true),
+    ].join('');
+
+    var last = bankSeries[bankSeries.length-1] || {};
+    var lastMonto = last.monto, lastN = last.n;
+    if(isSistema){
+      var montoSeries = DATA.aggregates['Bancos (montos totales)'] || [];
+      var nSeries = DATA.aggregates['Bancos (numero de transacciones)'] || [];
+      lastMonto = (montoSeries[montoSeries.length-1] || {}).monto;
+      lastN = (nSeries[nSeries.length-1] || {}).n;
+    }
+    var stats = [
+      {label: isSistema ? 'Tasa promedio ponderada' : 'Última tasa de compra', value: last.rate!=null ? fmtNum.format(last.rate) : '—', accent: isSistema},
+      {label:'Monto negociado', value: lastMonto!=null ? '$us '+fmtInt.format(lastMonto) : '—'},
+      {label:'N° de transacciones', value: lastN!=null ? fmtInt.format(lastN) : '—'},
+      {label:'Corte', value: last.date ? fmtDate(last.date) : '—'},
+    ];
+    var bankStatsEl = document.getElementById('bankStats');
+    bankStatsEl.innerHTML = stats.map(statTile).join('');
+    applyStagger(bankStatsEl, 70);
+  }
+
+  var reservasChart, reservasFrom = null;
+  function renderReservas(){
+    var rows = filterFrom(DATA.reservas, reservasFrom);
+    var series = [
+      {key:'divisas', label:'Divisas', color:'var(--divisas)', area:true},
+      {key:'oro', label:'Oro', color:'var(--oro)', area:true},
+      {key:'deg', label:'DEG', color:'var(--deg)', area:true},
+      {key:'neta', label:'Reservas brutas (total)', color:'var(--ink)', width:2},
+      {key:'netas_obligaciones', label:'Reservas netas de obligaciones', color:'var(--netas-obl)', width:2, dashed:true, tooltip:true},
+    ];
+    if(!reservasChart){
+      reservasChart = new LineChart('reservasChart', {series:series, data:rows, height:260, yFormat:function(v){return fmtInt.format(v);}, zeroBaseline:true});
+    } else {
+      reservasChart.opts.series = series; reservasChart.opts.data = rows; reservasChart.render();
+    }
+    document.getElementById('reservasLegend').innerHTML = series.map(function(s){
+      return legendItem(s.color, s.label, s.dashed);
+    }).join('') + ' <span class="item" style="color:var(--muted)">Millones de USD</span>';
+  }
+  function setupReservasControls(){
+    var asof = DATA.meta.asof;
+    var ranges = [
+      {label:'3 meses', from: monthsAgo(asof,3)},
+      {label:'6 meses', from: monthsAgo(asof,6)},
+      {label:'1 año', from: yearsAgo(asof,1)},
+      {label:'5 años', from: yearsAgo(asof,5)},
+      {label:'20 años', from: yearsAgo(asof,20)},
+      {label:'Todo (1987–)', from: null},
+    ];
+    var ctl = document.getElementById('reservasRangeCtl');
+    ctl.innerHTML = ranges.map(function(r,i){ return '<button class="pill" data-i="'+i+'">'+r.label+'</button>'; }).join('');
+    var btns = ctl.querySelectorAll('.pill');
+    function setActive(i){
+      btns.forEach(function(b,bi){ b.classList.toggle('active', bi===i); });
+      reservasFrom = ranges[i].from;
+      renderReservas();
+    }
+    btns.forEach(function(b,i){ b.addEventListener('click', function(){ setActive(i); }); });
+    setActive(3);
+  }
+
+  function renderBalanza(){
+    var rows = DATA.balanza.slice(-24).map(function(d){
+      return {date:d.date, ingreso:d.ingreso, egreso: d.egreso!=null? -Math.abs(d.egreso): null};
+    });
+    drawDivergingBars('balanzaChart', rows);
+    document.getElementById('balanzaLegend').innerHTML = [
+      legendItem('var(--ingreso)','Ingreso de divisas'),
+      legendItem('var(--egreso)','Egreso de divisas'),
+    ].join('') + ' <span class="item" style="color:var(--muted)">Millones de USD</span>';
+
+    var statsEl = document.getElementById('balanzaStats');
+    if(statsEl){
+      var withFlujo = DATA.balanza.filter(function(d){ return d.flujo != null; });
+      var lastM = withFlujo[withFlujo.length-1];
+      var last12 = withFlujo.slice(-12);
+      var cum12 = last12.reduce(function(a,d){ return a+d.flujo; }, 0);
+      var stats = [];
+      if(lastM){ stats.push({label:'Flujo neto del mes', value: fmtInt.format(lastM.flujo)+' M', sub: fmtMonthYear(lastM.date)+' · USD'}); }
+      stats.push({label:'Flujo neto acumulado (12m)', value: fmtInt.format(cum12)+' M', sub:'USD · últimos 12 meses'});
+      statsEl.innerHTML = stats.map(statTile).join('');
+      applyStagger(statsEl, 70);
+    }
+  }
+
+  function renderItcr(){
+    var rows = DATA.itcr;
+    var series = [{key:'value', label:'Índice TCR', color:'var(--accent)', width:2}];
+    new LineChart('itcrChart', {series:series, data:rows, height:220, yFormat:function(v){return v.toFixed(0);}, yMin:90, yMax:110});
+
+    var statsEl = document.getElementById('itcrStats');
+    if(statsEl){
+      var withVal = rows.filter(function(d){ return d.value != null; });
+      var last = withVal[withVal.length-1];
+      var maxRow = withVal.reduce(function(a,d){ return (!a || d.value>a.value) ? d : a; }, null);
+      var stats = [];
+      if(last){ stats.push({label:'Índice actual', value: last.value.toFixed(1).replace('.',','), sub: fmtDate(last.date)}); }
+      if(last && maxRow){
+        var devMax = (last.value-maxRow.value)/maxRow.value*100;
+        stats.push({label:'Vs. máximo histórico', value: (devMax>=0?'+':'')+devMax.toFixed(1).replace('.',',')+'%', sub: 'Máximo '+maxRow.value.toFixed(1).replace('.',',')+' ('+new Date(maxRow.date+'T00:00:00').getFullYear()+')'});
+        stats.push({label:'Vs. diciembre 2022', value: (last.value>=100?'+':'')+(last.value-100).toFixed(1).replace('.',',')+'%', sub:'Base del índice = 100'});
+      }
+      statsEl.innerHTML = stats.map(statTile).join('');
+      applyStagger(statsEl, 70);
+    }
+  }
+
+  function renderNews(news){
+    var el = document.getElementById('newsList');
+    if(!el) return;
+    if(!news || !news.items || !news.items.length){
+      el.innerHTML = '<p style="color:var(--muted);font-size:12.5px;">No se pudieron cargar los titulares.</p>';
+      return;
+    }
+    el.innerHTML = news.items.map(function(it){
+      var thumb = it.image ? '<div class="news-thumb"><img src="'+it.image+'" alt="" loading="lazy" onerror="this.parentElement.remove()"></div>' : '';
+      return '<a class="news-item stagger-item" href="'+it.url+'" target="_blank" rel="noopener noreferrer">'+
+        thumb+
+        '<div class="news-body">'+
+          '<div class="news-title">'+it.title+'</div>'+
+          '<p class="news-summary">'+it.summary+'</p>'+
+          '<div class="news-meta">'+it.source+'</div>'+
+        '</div>'+
+      '</a>';
+    }).join('');
+    applyStagger(el, 80);
+    var upd = document.getElementById('newsUpdated');
+    if(upd){
+      upd.textContent = news.updated
+        ? 'Titulares seleccionados automáticamente cada día a partir de El Deber; resumen propio, no reproducción del artículo. Última actualización: '+fmtDate(news.updated)+'.'
+        : 'Titulares seleccionados automáticamente a partir de El Deber; resumen propio, no reproducción del artículo.';
+    }
+  }
+
+  function init(data){
+    DATA = data;
+    renderSpotlight();
+    renderKPIs();
+    setupMainControls();
+    renderContextTco();
+    renderBankSystemStats();
+    renderBankSection();
+    renderContextBanco();
+    setupReservasControls();
+    renderContextReservas();
+    renderBalanza();
+    renderContextBalanza();
+    renderItcr();
+    renderContextItcr();
+  }
+
+  function setupReveal(){
+    var topEls = document.querySelectorAll('.reveal-top');
+    topEls.forEach(function(t,i){
+      setTimeout(function(){ t.classList.add('in-view'); }, 80 + i*140);
+    });
+    var targets = document.querySelectorAll('.reveal');
+    if('IntersectionObserver' in window){
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if(e.isIntersecting){ e.target.classList.add('in-view'); io.unobserve(e.target); }
+        });
+      }, {threshold:0.1, rootMargin:'0px 0px -60px 0px'});
+      targets.forEach(function(t){ io.observe(t); });
+    } else {
+      targets.forEach(function(t){ t.classList.add('in-view'); });
+    }
+  }
+  setupReveal();
+
+  fetch('data.json').then(function(r){return r.json();}).then(function(data){
+    init(data);
+    fetch('noticias.json').then(function(r){return r.json();}).then(renderNews).catch(function(){ renderNews(null); });
+  }).catch(function(err){
+    document.querySelector('.wrap').innerHTML = '<p style="padding:40px 0;color:var(--bad);">No se pudo cargar el dataset (data.json). '+err+'</p>';
+  });
+})();
+</script>
+
+</body>
+</html>
