@@ -152,6 +152,12 @@
   .spotlight-figure .s-chip.down{ color:var(--good); }
   .spotlight-figure .s-context{ margin-top:8px; font-size:13px; color:var(--ink-2); }
 
+  .intraday-block{ margin-top:18px; max-width:520px; }
+  .intraday-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:4px; }
+  .intraday-label{ font-family:var(--font-mono); font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  .intraday-fresh{ font-family:var(--font-mono); font-size:10.5px; color:var(--muted); white-space:nowrap; }
+  #intradayChart{ height:110px; }
+
   /* scroll / entrance animations */
   .reveal{ opacity:0; transform:translateY(18px); transition:opacity .6s cubic-bezier(.2,.7,.3,1), transform .6s cubic-bezier(.2,.7,.3,1); }
   .reveal.in-view{ opacity:1; transform:none; }
@@ -285,7 +291,7 @@
 <header class="hero reveal-top">
   <div class="hero-inner">
     <div class="hero-top">
-      <div class="eyebrow"><span class="dot"></span>Borrador · datos históricos, sin conexión en vivo</div>
+      <div class="eyebrow"><span class="dot"></span>Actualización automática · Banco Central de Bolivia (BCB), Binance y El Deber</div>
       <div class="asof" id="asof">— </div>
     </div>
     <div class="hero-bar"></div>
@@ -307,6 +313,13 @@
         <div id="spotlightChipWrap"></div>
       </div>
       <div class="s-context" id="spotlightContext"></div>
+      <div class="intraday-block" id="intradayBlock" hidden>
+        <div class="intraday-head">
+          <span class="intraday-label">USDT/BOB paralelo · últimas 24 horas</span>
+          <span class="intraday-fresh" id="intradayFresh"></span>
+        </div>
+        <div class="chart-wrap" id="intradayChart"></div>
+      </div>
     </div>
   </div>
 
@@ -498,7 +511,8 @@
     // x labels: first, middle, last
     [0, Math.floor((n-1)/2), n-1].forEach(function(i){
       if(i<0) return;
-      svgParts.push('<text x="'+x(i)+'" y="'+(height-6)+'" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">'+fmtDateShort(data[i].date)+'</text>');
+      var xLabel = opts.xLabelFmt ? opts.xLabelFmt(data[i].date) : fmtDateShort(data[i].date);
+      svgParts.push('<text x="'+x(i)+'" y="'+(height-6)+'" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">'+xLabel+'</text>');
     });
 
     // bands first (so lines draw on top)
@@ -571,7 +585,8 @@
   };
   LineChart.prototype.showTooltip = function(idx, xpx, rectPx){
     var opts = this.opts, data = this.opts.data, row = data[idx];
-    var lines = [ '<div class="t-date">'+fmtDate(row.date)+'</div>' ];
+    var tooltipDate = opts.tooltipDateFmt ? opts.tooltipDateFmt(row.date) : fmtDate(row.date);
+    var lines = [ '<div class="t-date">'+tooltipDate+'</div>' ];
     opts.series.filter(function(s){return s.tooltip!==false;}).forEach(function(s){
       var v = row[s.key];
       if(v==null) return;
@@ -792,6 +807,45 @@
     animateNumber(document.getElementById('spotlightValue'), brecha, {decimals:1, suffix:'%', signed:true, duration:900});
     document.getElementById('spotlightChipWrap').innerHTML = chipHtml;
     document.getElementById('spotlightContext').textContent = 'USDT/BOB '+fmtNum.format(lastUsdt.usdt_bob)+' · TCO venta '+fmtNum.format(lastTco.tco_venta_bcb)+' · '+fmtDate(lastTco.date);
+  }
+
+  function parseUtcTs(ts){
+    // "YYYY-MM-DD HH:MM:SS" guardado en UTC por el scraper -> Date real
+    return new Date(ts.replace(' ', 'T')+'Z');
+  }
+  function fmtHM(ts){
+    var d = parseUtcTs(ts);
+    return d.toLocaleTimeString('es-BO', {hour:'2-digit', minute:'2-digit'});
+  }
+  function fmtRelative(ts){
+    var mins = Math.round((Date.now() - parseUtcTs(ts).getTime())/60000);
+    if(mins < 1) return 'hace instantes';
+    if(mins < 60) return 'hace '+mins+' min';
+    var hrs = Math.round(mins/60);
+    if(hrs < 24) return 'hace '+hrs+(hrs===1?' hora':' horas');
+    return 'hace '+Math.round(hrs/24)+' días';
+  }
+
+  function renderUsdtIntraday(){
+    var block = document.getElementById('intradayBlock');
+    if(!block) return;
+    var points = (DATA.usdt_intraday_recent || []).slice();
+    points.sort(function(a,b){ return a.ts < b.ts ? -1 : (a.ts > b.ts ? 1 : 0); });
+    var cutoff = Date.now() - 24*3600*1000;
+    var recent = points.filter(function(p){ return parseUtcTs(p.ts).getTime() >= cutoff; });
+    if(recent.length < 2){ block.hidden = true; return; }
+    block.hidden = false;
+
+    var rows = recent.map(function(p){ return {date:p.ts, value:p.value}; });
+    var series = [{key:'value', label:'USDT/BOB', color:'var(--series-paralelo)', width:2, area:true, tooltip:true}];
+    new LineChart('intradayChart', {
+      series:series, data:rows, height:110, endpointDots:true,
+      yFormat:function(v){return fmtNum.format(v);},
+      xLabelFmt:fmtHM,
+      tooltipDateFmt:function(ts){ return fmtHM(ts)+' · '+fmtDate(ts.slice(0,10)); },
+    });
+    var freshEl = document.getElementById('intradayFresh');
+    if(freshEl){ freshEl.textContent = 'Actualizado '+fmtRelative(recent[recent.length-1].ts); }
   }
 
   // ---------- contexto editorial automático, por sección ----------
@@ -1212,14 +1266,15 @@
     var upd = document.getElementById('newsUpdated');
     if(upd){
       upd.textContent = news.updated
-        ? 'Titulares seleccionados automáticamente cada día a partir de El Deber; resumen propio, no reproducción del artículo. Última actualización: '+fmtDate(news.updated)+'.'
-        : 'Titulares seleccionados automáticamente a partir de El Deber; resumen propio, no reproducción del artículo.';
+        ? 'Titulares filtrados automáticamente del feed de Economía de El Deber por palabras clave (tipo de cambio, reservas, FMI, subsidios, etc.); la bajada de cada nota es la que publica el propio medio. Última actualización: '+fmtDate(news.updated)+'.'
+        : 'Titulares filtrados automáticamente del feed de Economía de El Deber por palabras clave; la bajada de cada nota es la que publica el propio medio.';
     }
   }
 
   function init(data){
     DATA = data;
     renderSpotlight();
+    renderUsdtIntraday();
     renderKPIs();
     setupMainControls();
     renderContextTco();
