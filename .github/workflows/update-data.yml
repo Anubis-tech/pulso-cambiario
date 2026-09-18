@@ -29,6 +29,7 @@ jobs:
 
       - name: Actualizar noticias (RSS de El Deber)
         run: python scripts/update_news.py
+        continue-on-error: true  # si el sitio de noticias falla, igual se publican los datos numéricos
 
       - name: Publicar cambios si hubo datos nuevos
         run: |
