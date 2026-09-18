@@ -23,8 +23,11 @@ OUT_PATH = "noticias.json"
 MAX_ITEMS = 5
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (compatible; PulsoCambiarioBot/1.0; "
-                  "+https://github.com/Anubis-tech/pulso-cambiario)"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+    "Accept": "application/rss+xml, application/xml, text/xml, */*;q=0.9",
+    "Accept-Language": "es-BO,es;q=0.9,en;q=0.8",
+    "Referer": "https://eldeber.com.bo/",
 }
 
 KEYWORDS = [
@@ -73,14 +76,23 @@ def parse_pubdate(s):
 
 def main():
     log(f"Descargando RSS: {RSS_URL}")
-    r = requests.get(RSS_URL, headers=HEADERS, timeout=25)
-    r.raise_for_status()
+    try:
+        r = requests.get(RSS_URL, headers=HEADERS, timeout=25)
+        r.raise_for_status()
+        root = ElementTree.fromstring(r.content)
+    except Exception as e:
+        # Un fallo acá (403 del sitio, timeout, XML roto, etc.) nunca debe
+        # tumbar el resto del pipeline: se deja noticias.json sin tocar y
+        # se sale con código 0 para que el workflow siga hasta el commit
+        # de los datos numéricos, que sí se actualizaron en el paso anterior.
+        log(f"ADVERTENCIA: no se pudo obtener/leer el RSS ({e}). "
+            "Se deja noticias.json sin cambios.")
+        return 0
 
-    root = ElementTree.fromstring(r.content)
     channel = root.find("channel")
     if channel is None:
-        log("ERROR: el feed no tiene <channel>. Se aborta sin tocar noticias.json.")
-        return 1
+        log("ADVERTENCIA: el feed no tiene <channel>. Se deja noticias.json sin cambios.")
+        return 0
 
     candidates = []
     for item in channel.findall("item"):
