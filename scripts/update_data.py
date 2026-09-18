@@ -98,121 +98,205 @@ def fetch_tco(data):
 # 2. Tasas banco por banco (BCB, página HTML)
 # ---------------------------------------------------------------------------
 
+BANK_RATES_URL = ("https://www.bcb.gob.bo/?q=content/"
+                   "tipo-de-cambio-oficial-del-d%C3%B3lar-estadounidense-evolutivo")
+
+MESES_ABR = {
+    "ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6,
+    "jul": 7, "ago": 8, "sep": 9, "set": 9, "oct": 10, "nov": 11, "dic": 12,
+}
+
+
 def fetch_bank_rates(data):
+    """La página del BCB muestra el tipo de cambio por banco como una tabla
+    'ancha': una fila por banco, una columna por fecha (encabezados tipo
+    '17-sep'), y trae de regalo semanas de historia completa en cada
+    corrida - así que cada vez que se corre, se reintentan también fechas
+    pasadas (upsert es idempotente, no hace daño repetir una fecha ya
+    cargada) y el pipeline se autocorrige solo si se perdió una corrida."""
     from bs4 import BeautifulSoup
 
-    log("Tasas bancarias: consultando bcb.gob.bo/tco_reporte_ultima_cotizacion.php ...")
-    r = requests.get("https://www.bcb.gob.bo/tco_reporte_ultima_cotizacion.php",
-                      headers=HEADERS, timeout=TIMEOUT)
+    log(f"Tasas bancarias: consultando {BANK_RATES_URL} ...")
+    r = requests.get(BANK_RATES_URL, headers=HEADERS, timeout=TIMEOUT)
     r.raise_for_status()
     soup = BeautifulSoup(r.text, "html.parser")
 
-    # Buscar la fecha de vigencia en el texto de la página.
-    page_text = soup.get_text(" ", strip=True)
-    date_str = _extract_report_date(page_text)
-    if not date_str:
-        log("  ADVERTENCIA: no se pudo determinar la fecha del reporte - se omite.")
+    tables = soup.find_all("table")
+    if not tables:
+        log("  ADVERTENCIA: la página no tiene ninguna tabla - "
+            "la estructura pudo haber cambiado. Se omite.")
         return False
 
+    rate_table = _find_wide_table(soup, "Compra") or tables[0]
+    monto_table = _find_wide_table(soup, "Montos transados") or (tables[1] if len(tables) > 1 else None)
+    n_table = _find_wide_table(soup, "Transacciones") or (tables[2] if len(tables) > 2 else None)
+
+    _, rates_by_row = _parse_wide_table(rate_table)
+    _, montos_by_row = _parse_wide_table(monto_table) if monto_table is not None else (None, {})
+    _, n_by_row = _parse_wide_table(n_table) if n_table is not None else (None, {})
+    montos_by_row = montos_by_row or {}
+    n_by_row = n_by_row or {}
+
     known_banks = set(data["bank_names"])
-    rows_by_bank = {}
-    weighted_avg = None
 
-    for table in soup.find_all("table"):
-        for tr in table.find_all("tr"):
-            cells = [td.get_text(" ", strip=True) for td in tr.find_all(["td", "th"])]
-            if len(cells) < 2:
-                continue
-            label = cells[0].strip()
-            label_norm = _norm_bank_name(label)
+    def match_bank(label):
+        label_norm = _norm_bank_name(label)
+        for bank in known_banks:
+            if _norm_bank_name(bank) == label_norm:
+                return bank
+        return None
 
-            matched = None
-            for bank in known_banks:
-                if _norm_bank_name(bank) == label_norm:
-                    matched = bank
-                    break
-            if matched:
-                nums = [_to_float(c) for c in cells[1:]]
-                nums = [n for n in nums if n is not None]
-                if len(nums) >= 1:
-                    rate = nums[0]
-                    monto = nums[1] if len(nums) > 1 else None
-                    n_trans = nums[2] if len(nums) > 2 else None
-                    rows_by_bank[matched] = {
-                        "date": date_str, "rate": rate, "monto": monto, "n": n_trans
-                    }
-            elif "ponderad" in label.lower() or "promedio" in label.lower():
-                nums = [_to_float(c) for c in cells[1:]]
-                nums = [n for n in nums if n is not None]
-                if nums:
-                    weighted_avg = nums[0]
+    def lookup_other_table(by_row, bank):
+        for label2, by_date2 in by_row.items():
+            if match_bank(label2) == bank:
+                return by_date2
+        return {}
 
-    if not rows_by_bank:
+    any_change = False
+    matched = 0
+
+    for label, by_date in rates_by_row.items():
+        bank = match_bank(label)
+        if not bank:
+            continue
+        matched += 1
+        montos = lookup_other_table(montos_by_row, bank)
+        ns = lookup_other_table(n_by_row, bank)
+        series = data["banks"].setdefault(bank, [])
+        for date_str, rate in by_date.items():
+            row = {"date": date_str, "rate": rate}
+            if date_str in montos:
+                row["monto"] = montos[date_str]
+            if date_str in ns:
+                row["n"] = ns[date_str]
+            if upsert(series, row):
+                any_change = True
+
+    if matched == 0:
         log("  ADVERTENCIA: no se reconoció ningún banco en la tabla - "
             "la estructura de la página pudo haber cambiado. Se omite.")
         return False
 
-    log(f"  Fecha del reporte: {date_str}. Bancos encontrados: {len(rows_by_bank)}")
+    log(f"  Bancos reconocidos: {matched} de {len(rates_by_row)} filas en la tabla.")
 
-    any_change = False
-    total_monto = 0.0
-    total_n = 0.0
-    weighted_sum = 0.0
-    have_montos = True
-
-    for bank, row in rows_by_bank.items():
-        clean = {"date": date_str, "rate": row["rate"]}
-        if row["monto"] is not None:
-            clean["monto"] = row["monto"]
-            total_monto += row["monto"]
-            weighted_sum += row["monto"] * row["rate"]
-        else:
-            have_montos = False
-        if row["n"] is not None:
-            clean["n"] = row["n"]
-            total_n += row["n"]
-        series = data["banks"].setdefault(bank, [])
-        if upsert(series, clean):
-            any_change = True
-
-    if weighted_avg is None and have_montos and total_monto > 0:
-        weighted_avg = weighted_sum / total_monto
-
+    # Filas agregadas "BANCOS (...)" - se toman directo de la página (ya
+    # vienen calculadas por el BCB) en vez de recalcularlas acá.
     agg = data.setdefault("aggregates", {})
-    if have_montos:
-        if upsert(agg.setdefault("Bancos (montos totales)", []),
-                  {"date": date_str, "monto": total_monto}):
+
+    def find_agg(by_row, keywords):
+        for label, by_date in by_row.items():
+            if any(kw in label.lower() for kw in keywords):
+                return by_date
+        return {}
+
+    for date_str, v in find_agg(rates_by_row, ["ponderad"]).items():
+        if upsert(agg.setdefault("Bancos (promedio ponderado)", []), {"date": date_str, "rate": v}):
             any_change = True
-        if upsert(agg.setdefault("Bancos (numero de transacciones)", []),
-                  {"date": date_str, "n": total_n}):
+    for date_str, v in find_agg(montos_by_row, ["montos totales", "monto total"]).items():
+        if upsert(agg.setdefault("Bancos (montos totales)", []), {"date": date_str, "monto": v}):
             any_change = True
-    if weighted_avg is not None:
-        if upsert(agg.setdefault("Bancos (promedio ponderado)", []),
-                  {"date": date_str, "rate": weighted_avg}):
+    for date_str, v in find_agg(n_by_row, ["numero de transacciones", "transacciones"]).items():
+        if upsert(agg.setdefault("Bancos (numero de transacciones)", []), {"date": date_str, "n": v}):
             any_change = True
 
     return any_change
 
 
-def _extract_report_date(text):
-    # Busca patrones tipo "jueves 17 de septiembre de 2026" o "17/09/2026"
-    meses = {
-        "enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
-        "julio": 7, "agosto": 8, "septiembre": 9, "setiembre": 9, "octubre": 10,
-        "noviembre": 11, "diciembre": 12,
-    }
-    m = re.search(r"(\d{1,2})\s+de\s+([a-zA-Záéíóú]+)\s+de\s+(\d{4})", text, re.IGNORECASE)
-    if m:
-        day = int(m.group(1))
-        mon = meses.get(m.group(2).lower())
-        year = int(m.group(3))
-        if mon:
-            return f"{year:04d}-{mon:02d}-{day:02d}"
-    m = re.search(r"(\d{1,2})/(\d{1,2})/(\d{4})", text)
-    if m:
-        d, mo, y = int(m.group(1)), int(m.group(2)), int(m.group(3))
-        return f"{y:04d}-{mo:02d}-{d:02d}"
+def _find_wide_table(soup, keyword):
+    """Busca la tabla precedida (en el texto cercano anterior) por 'keyword'
+    - así se distingue la tabla de tasas de la de montos y la de número de
+    transacciones aunque tengan la misma forma."""
+    for table in soup.find_all("table"):
+        node, seen = table, ""
+        for _ in range(6):
+            node = node.find_previous(string=True)
+            if node is None:
+                break
+            seen += " " + node
+        if keyword.lower() in seen.lower():
+            return table
     return None
+
+
+def _extract_range_end(caption_text):
+    """De un texto tipo 'Fecha de corte 26/06/2026 -- 17/09/2026' devuelve la
+    segunda fecha (la más reciente) como datetime."""
+    matches = re.findall(r"(\d{1,2})/(\d{1,2})/(\d{4})", caption_text)
+    if not matches:
+        return None
+    d, m, y = matches[-1]
+    try:
+        return datetime(int(y), int(m), int(d))
+    except ValueError:
+        return None
+
+
+def _parse_col_date(header_text, end_date):
+    """Convierte un encabezado de columna tipo '17-sep' en 'YYYY-MM-DD',
+    usando end_date para inferir el año (retrocede un año si el resultado
+    quedaría después de end_date)."""
+    m = re.match(r"^\s*(\d{1,2})[-/]([a-zA-Záéíóú]{3,})\s*$", header_text.strip(), re.IGNORECASE)
+    if not m:
+        return None
+    day = int(m.group(1))
+    mon_abbr = m.group(2).strip().lower()[:3].replace("é", "e")
+    month = MESES_ABR.get(mon_abbr)
+    if not month:
+        return None
+    year = end_date.year
+    try:
+        d = datetime(year, month, day)
+    except ValueError:
+        return None
+    if d > end_date:
+        try:
+            d = datetime(year - 1, month, day)
+        except ValueError:
+            return None
+    return d.strftime("%Y-%m-%d")
+
+
+def _parse_wide_table(table):
+    """Parsea una tabla 'ancha' del BCB: primera columna = nombre de banco (o
+    fila agregada 'BANCOS (...)'), columnas siguientes = fechas cortas
+    ('17-sep'). Devuelve (fecha_fin_str, {etiqueta_fila: {fecha: valor}})."""
+    if table is None:
+        return None, {}
+    rows = table.find_all("tr")
+    if len(rows) < 2:
+        return None, {}
+
+    header_cells = [c.get_text(" ", strip=True) for c in rows[0].find_all(["td", "th"])]
+    date_headers = header_cells[1:]
+
+    caption_text = ""
+    node = table
+    for _ in range(6):
+        node = node.find_previous(string=True)
+        if node is None:
+            break
+        caption_text += " " + node
+    end_date = _extract_range_end(caption_text) or datetime.now(timezone.utc)
+
+    col_dates = [_parse_col_date(h, end_date) for h in date_headers]
+
+    data_by_row = {}
+    for tr in rows[1:]:
+        cells = [c.get_text(" ", strip=True) for c in tr.find_all(["td", "th"])]
+        if len(cells) < 2:
+            continue
+        label = cells[0].strip()
+        by_date = {}
+        for date_str, raw in zip(col_dates, cells[1:]):
+            if date_str is None:
+                continue
+            v = _to_float(raw)
+            if v is not None:
+                by_date[date_str] = v
+        if by_date:
+            data_by_row[label] = by_date
+
+    return end_date.strftime("%Y-%m-%d"), data_by_row
 
 
 def _norm_bank_name(name):
