@@ -98,8 +98,7 @@ def fetch_tco(data):
 # 2. Tasas banco por banco (BCB, página HTML)
 # ---------------------------------------------------------------------------
 
-BANK_RATES_URL = ("https://www.bcb.gob.bo/?q=content/"
-                   "tipo-de-cambio-oficial-del-d%C3%B3lar-estadounidense-evolutivo")
+BANK_RATES_URL = "https://www.bcb.gob.bo/bcb_tco_publico_evolutivo.php"
 
 MESES_ABR = {
     "ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6,
