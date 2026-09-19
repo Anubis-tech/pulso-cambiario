@@ -14,6 +14,7 @@ funciona desde el sandbox de Claude porque bcb.gob.bo está bloqueado ahí.
 """
 
 import bisect
+import calendar
 import json
 import re
 import sys
@@ -115,6 +116,9 @@ def fetch_tco(data):
 # ---------------------------------------------------------------------------
 
 BANK_RATES_URL = "https://www.bcb.gob.bo/bcb_tco_publico_evolutivo.php"
+# Nota: la página del portal (…?q=content/tipo-de-cambio-...-evolutivo) solo
+# incrusta este .php dentro de un <object>; el div de contenido del portal en
+# sí está vacío, por eso hay que pedir este endpoint directamente.
 
 MESES_ABR = {
     "ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6,
@@ -439,6 +443,7 @@ XLSX_SOURCES = {
     "balanza": {
         "url": "https://www.bcb.gob.bo/webdocs/sector_externo/"
                "G%20Otras%20variables%20del%20sector%20externo/Balanza%20Cambiaria.xlsx",
+        "layout": "rows",  # fecha armada de una fila de años + fila de meses (ver _extract_year_month_grid)
         "columns": {
             "ingreso": ["ingreso"],
             "egreso": ["egreso"],
@@ -451,9 +456,18 @@ XLSX_SOURCES = {
                "G%20Otras%20variables%20del%20sector%20externo/"
                "Indices%20de%20tipo%20de%20cambio%20real.xlsx",
         "columns": {
-            "value": ["itcr", "indice de tipo de cambio real", "indice"],
+            # la columna que nos interesa es la del índice "Multilateral" (la
+            # canasta agregada de socios comerciales), no una columna que
+            # diga literalmente "itcr" - esa palabra no aparece en la hoja.
+            "value": ["multilateral", "itcr", "indice de tipo de cambio real"],
         },
-        "max_relative_change": 0.20,
+        # 0.35 y no 0.20: el índice tuvo un salto real de ~30% entre junio y
+        # julio de 2026 (consistente con la crisis cambiaria de este año),
+        # que un umbral más ajustado rechazaría como si fuera un error.
+        "max_relative_change": 0.35,
+        # la hoja fecha cada fila el día 1 del mes; el historial ya guardado
+        # usa fin de mes, así que se normaliza para no duplicar puntos.
+        "date_mode": "month_end",
     },
 }
 
@@ -468,9 +482,12 @@ def fetch_xlsx_series(data, series_name):
     r.raise_for_status()
     wb = load_workbook(io.BytesIO(r.content), data_only=True)
 
+    extractor = (_extract_year_month_grid if cfg.get("layout") == "rows"
+                 else _extract_dated_rows)
+
     best_sheet, best_rows = None, []
     for sheet in wb.worksheets:
-        rows = _extract_dated_rows(sheet, cfg["columns"])
+        rows = extractor(sheet, cfg["columns"])
         if len(rows) > len(best_rows):
             best_sheet, best_rows = sheet.title, rows
 
@@ -480,15 +497,26 @@ def fetch_xlsx_series(data, series_name):
             f"Revisar manualmente y ajustar el mapeo de columnas en update_data.py.")
         return False
 
+    if cfg.get("date_mode") == "month_end":
+        for row in best_rows:
+            row["date"] = _to_month_end(row["date"])
+
     log(f"  Hoja usada: {best_sheet}. Filas de datos detectadas: {len(best_rows)}. "
         f"Última fila: {best_rows[-1]}")
 
     series = data[series_name]
+    by_date = {r["date"]: r for r in series}
     max_rel = cfg["max_relative_change"]
     any_change = False
     key = "value" if series_name == "itcr" else "neta" if series_name == "reservas" else None
 
     for row in best_rows:
+        # Si la fecha ya está guardada con el mismo valor, no hay nada que
+        # decidir - se salta el chequeo de sensatez (no aplica a un no-op) y
+        # se evita rechazarla por error si por casualidad el vecino
+        # cronológico más cercano tiene un valor atípico.
+        if by_date.get(row["date"]) == row:
+            continue
         if max_rel is not None and key and key in row:
             prev_val = _nearest_prior_value(series, row["date"], key)
             if prev_val is not None and not sanity_ok(prev_val, row[key], max_rel):
@@ -497,8 +525,101 @@ def fetch_xlsx_series(data, series_name):
                 continue
         if upsert(series, row):
             any_change = True
+            by_date[row["date"]] = row
 
     return any_change
+
+
+def _to_month_end(date_str):
+    y, m, _ = date_str.split("-")
+    y, m = int(y), int(m)
+    d = calendar.monthrange(y, m)[1]
+    return f"{y:04d}-{m:02d}-{d:02d}"
+
+
+def _parse_year_cell(v):
+    """Interpreta una celda de año, que en el Excel de balanza a veces viene
+    como número (2010) y a veces como texto con una anotación ('2020 (p)' -
+    provisional)."""
+    if isinstance(v, (int, float)):
+        y = int(v)
+        return y if 1990 <= y <= 2100 else None
+    if isinstance(v, str):
+        m = re.match(r"^\s*(\d{4})", v.strip())
+        if m:
+            y = int(m.group(1))
+            return y if 1990 <= y <= 2100 else None
+    return None
+
+
+def _extract_year_month_grid(sheet, row_labels):
+    """Ubica datos en hojas 'anchas' tipo Balanza Cambiaria del BCB: una fila
+    con el año (uno cada bloque de columnas: 12 meses + 4 totales
+    trimestrales + 1 total anual = 17 columnas), la fila justo debajo con
+    los meses abreviados (ENE, FEB, ...), y los campos identificados por la
+    etiqueta de la fila en la primera columna (no por encabezado de
+    columna, al revés que _extract_dated_rows)."""
+    rows_all = list(sheet.iter_rows(values_only=True))
+    if not rows_all:
+        return []
+    max_cols = max((len(r) for r in rows_all), default=0)
+
+    # 1. Fila de años: la que tenga más celdas interpretables como año,
+    # buscando solo cerca del principio de la hoja (encabezados).
+    year_row_idx, year_hits = None, 0
+    for i, row in enumerate(rows_all[:20]):
+        hits = sum(1 for v in row if _parse_year_cell(v) is not None)
+        if hits > year_hits:
+            year_row_idx, year_hits = i, hits
+    if year_row_idx is None or year_hits < 2:
+        return []
+
+    year_row = rows_all[year_row_idx]
+    month_row = rows_all[year_row_idx + 1] if year_row_idx + 1 < len(rows_all) else None
+    if month_row is None:
+        return []
+
+    year_cols = [(j, _parse_year_cell(v)) for j, v in enumerate(year_row)
+                 if _parse_year_cell(v) is not None]
+
+    # 2. Mapear cada columna de mes válida (dentro del bloque de cada año) a
+    # su fecha de fin de mes.
+    col_date = {}
+    for idx, (j, year) in enumerate(year_cols):
+        next_year_col = year_cols[idx + 1][0] if idx + 1 < len(year_cols) else max_cols
+        for jj in range(j, min(next_year_col, max_cols)):
+            cell = month_row[jj] if jj < len(month_row) else None
+            if not isinstance(cell, str):
+                continue
+            mon = MESES_ABR.get(cell.strip().lower())
+            if mon:
+                col_date[jj] = f"{year:04d}-{mon:02d}-{calendar.monthrange(year, mon)[1]:02d}"
+
+    # 3. Ubicar la fila de cada campo por palabra clave en la primera
+    # columna (se queda con la primera coincidencia, de arriba hacia abajo).
+    row_idx_for_field = {}
+    for i, row in enumerate(rows_all):
+        label = row[0] if row else None
+        if not isinstance(label, str):
+            continue
+        label_norm = label.strip().lower()
+        for field, keywords in row_labels.items():
+            if field in row_idx_for_field:
+                continue
+            if any(kw in label_norm for kw in keywords):
+                row_idx_for_field[field] = i
+
+    if not row_idx_for_field:
+        return []
+
+    by_date = {}
+    for field, i in row_idx_for_field.items():
+        row = rows_all[i]
+        for j, date_str in col_date.items():
+            if j < len(row) and isinstance(row[j], (int, float)):
+                by_date.setdefault(date_str, {"date": date_str})[field] = float(row[j])
+
+    return sorted(by_date.values(), key=lambda r: r["date"])
 
 
 def _extract_dated_rows(sheet, column_map):
