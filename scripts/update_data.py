@@ -13,6 +13,7 @@ Pensado para correr en GitHub Actions (con acceso normal a internet). NO
 funciona desde el sandbox de Claude porque bcb.gob.bo está bloqueado ahí.
 """
 
+import bisect
 import json
 import re
 import sys
@@ -66,6 +67,21 @@ def sanity_ok(old_value, new_value, max_relative_change):
         return True
     change = abs(new_value - old_value) / abs(old_value)
     return change <= max_relative_change
+
+
+def _nearest_prior_value(series, date_str, key):
+    """Busca en 'series' (lista de dicts con 'date', ya ordenada) el valor de
+    'key' en la fila más reciente con fecha ESTRICTAMENTE anterior a
+    date_str. Se usa para el chequeo de sensatez en vez de comparar siempre
+    contra la última fecha conocida de toda la serie - así una fila vieja del
+    Excel (p.ej. 2002) se compara contra su vecina cronológica real, no
+    contra el dato de hoy."""
+    dates = [r["date"] for r in series]
+    idx = bisect.bisect_left(dates, date_str)
+    for i in range(idx - 1, -1, -1):
+        if key in series[i]:
+            return series[i][key]
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -468,21 +484,19 @@ def fetch_xlsx_series(data, series_name):
         f"Última fila: {best_rows[-1]}")
 
     series = data[series_name]
-    last = series[-1] if series else None
     max_rel = cfg["max_relative_change"]
     any_change = False
+    key = "value" if series_name == "itcr" else "neta" if series_name == "reservas" else None
 
     for row in best_rows:
-        if last and max_rel is not None:
-            key = "value" if series_name == "itcr" else "neta" if series_name == "reservas" else None
-            if key and key in row and key in (last or {}):
-                if not sanity_ok(last[key], row[key], max_rel):
-                    log(f"  ADVERTENCIA: {series_name} {row['date']} valor {row[key]} "
-                        f"difiere demasiado del último conocido ({last[key]}) - fila omitida.")
-                    continue
+        if max_rel is not None and key and key in row:
+            prev_val = _nearest_prior_value(series, row["date"], key)
+            if prev_val is not None and not sanity_ok(prev_val, row[key], max_rel):
+                log(f"  ADVERTENCIA: {series_name} {row['date']} valor {row[key]} "
+                    f"difiere demasiado del valor anterior más cercano ({prev_val}) - fila omitida.")
+                continue
         if upsert(series, row):
             any_change = True
-            last = row
 
     return any_change
 
