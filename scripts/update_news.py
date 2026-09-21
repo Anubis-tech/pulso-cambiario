@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 """
-Genera noticias.json a partir del RSS de Economía de El Deber, filtrando por
-palabras clave relacionadas a tipo de cambio, reservas, préstamos
-internacionales, subsidios, etc.
+Genera noticias.json a partir del RSS general de portada de El Deber,
+filtrando por palabras clave relacionadas a tipo de cambio, reservas,
+préstamos internacionales, subsidios, etc.
+
+Usamos el feed de portada (/rss/home.xml) en vez del feed específico de
+Economía (/rss/economia.xml): la sección Economía del sitio suele estar
+detrás de un paywall más agresivo para accesos automatizados, lo que hacía
+que noticias.json se quedara desactualizado por varios días aunque el sitio
+sí publicaba noticias económicas nuevas. El feed de portada trae ~100 notas
+de todas las secciones (no solo Economía) y el mismo filtro de palabras
+clave de abajo elige, de ahí, las relacionadas a tipo de cambio/BCB/FMI/etc.
 
 No usa ningún modelo de lenguaje: el "resumen" de cada nota es la propia
 descripción (bajada) que El Deber publica en su feed RSS, pensada por el
@@ -18,7 +26,7 @@ from xml.etree import ElementTree
 
 import requests
 
-RSS_URL = "https://eldeber.com.bo/rss/economia.xml"
+RSS_URL = "https://eldeber.com.bo/rss/home.xml"
 OUT_PATH = "noticias.json"
 MAX_ITEMS = 5
 
@@ -34,9 +42,10 @@ KEYWORDS = [
     "dolar", "dólar", "tipo de cambio", "tco", "devaluacion", "devaluación",
     "apreciacion", "depreciacion", "reserva", "bcb", "banco central",
     "prestamo", "préstamo", "credito internacional", "crédito internacional",
-    "fmi", "banco mundial", "bid ", "deuda externa", "subsidio",
-    "divisas", "usdt", "paralelo", "cambiario", "importacion", "importación",
-    "exportacion", "exportación", "balanza comercial", "inflacion", "inflación",
+    "fmi", "banco mundial", "bid ", "deuda externa", "subsidio", "subvencion",
+    "subvención", "divisas", "usdt", "paralelo", "cambiario", "cambiaria",
+    "importacion", "importación", "exportacion", "exportación",
+    "balanza comercial", "inflacion", "inflación",
 ]
 
 

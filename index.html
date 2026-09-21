@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Pulso Cambiario</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -139,13 +140,20 @@
   /* spotlight figure */
   .spotlight{ padding:24px 0 6px; border-bottom:1px solid var(--border); }
   .spotlight-headline{ margin:0 0 18px; font-family:var(--font-ui); font-size:16.5px; font-weight:600; line-height:1.45; color:var(--ink); max-width:70ch; }
+  .spotlight-grid{ display:flex; flex-wrap:wrap; gap:26px 44px; }
+  .spotlight-grid .spotlight-figure{ flex:1 1 240px; min-width:220px; }
   .spotlight-figure .s-label{ font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:6px; }
   .spotlight-figure .s-row{ display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; }
   .spotlight-figure .s-value{ font-family:var(--font-display); font-weight:800; font-size:clamp(46px,9vw,76px); line-height:0.92; letter-spacing:-0.01em; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .spotlight-grid .spotlight-figure .s-value{ font-size:clamp(32px,4.6vw,48px); }
   .spotlight-figure .s-chip{ font-family:var(--font-mono); font-size:13px; font-weight:700; white-space:nowrap; }
   .spotlight-figure .s-chip.up{ color:var(--bad); }
   .spotlight-figure .s-chip.down{ color:var(--good); }
   .spotlight-figure .s-context{ margin-top:8px; font-size:13px; color:var(--ink-2); }
+  @media (max-width:640px){
+    .spotlight-grid{ gap:22px; }
+    .spotlight-grid .spotlight-figure{ flex-basis:100%; }
+  }
 
   .intraday-block{ margin-top:18px; max-width:520px; }
   .intraday-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:4px; }
@@ -231,6 +239,8 @@
   .pill.ghost.active{ background: var(--ink); color:var(--bg); border-color:var(--ink); }
   .pill-sistema{ font-weight:700; border-color:var(--ingreso); margin-right:9px; }
   .pill-sistema.active{ background:var(--ingreso); border-color:var(--ingreso); color:#fff; }
+  .pill-bank{ color:var(--b, var(--ink-2)); border-color:var(--b, var(--rule)); font-weight:600; }
+  .pill-bank.active{ background:var(--b, var(--ink)); border-color:var(--b, var(--ink)); color:#fff; }
 
   .bank-row{ display:flex; flex-wrap:wrap; gap:6px; }
 
@@ -285,7 +295,7 @@
 <header class="hero reveal-top">
   <div class="hero-inner">
     <div class="hero-top">
-      <div class="eyebrow"><span class="dot"></span>Actualización automática · Banco Central de Bolivia (BCB), Binance y El Deber</div>
+      <div class="eyebrow"><span class="dot"></span>Datos al instante · Banco Central de Bolivia (BCB), Binance y El Deber</div>
       <div class="asof" id="asof">— </div>
     </div>
     <div class="hero-bar"></div>
@@ -300,19 +310,37 @@
 
   <div class="spotlight reveal-top" id="spotlight">
     <p class="spotlight-headline" id="spotlightHeadline"></p>
-    <div class="spotlight-figure">
-      <div class="s-label"><span class="accent-draw"></span>Brecha paralelo vs. TCO venta</div>
-      <div class="s-row">
-        <div class="s-value" id="spotlightValue">—</div>
-        <div id="spotlightChipWrap"></div>
-      </div>
-      <div class="s-context" id="spotlightContext"></div>
-      <div class="intraday-block" id="intradayBlock" hidden>
-        <div class="intraday-head">
-          <span class="intraday-label">USDT/BOB paralelo · últimas 24 horas</span>
-          <span class="intraday-fresh" id="intradayFresh"></span>
+    <div class="spotlight-grid">
+      <div class="spotlight-figure">
+        <div class="s-label">TCO oficial BCB (venta)</div>
+        <div class="s-row">
+          <div class="s-value" id="tcoValue">—</div>
+          <div id="tcoChipWrap"></div>
         </div>
-        <div class="chart-wrap" id="intradayChart"></div>
+        <div class="s-context" id="tcoContext"></div>
+      </div>
+      <div class="spotlight-figure">
+        <div class="s-label">USDT/BOB paralelo</div>
+        <div class="s-row">
+          <div class="s-value" id="usdtValue">—</div>
+          <div id="usdtChipWrap"></div>
+        </div>
+        <div class="s-context" id="usdtContext"></div>
+        <div class="intraday-block" id="intradayBlock" hidden>
+          <div class="intraday-head">
+            <span class="intraday-label">Últimas 24 horas</span>
+            <span class="intraday-fresh" id="intradayFresh"></span>
+          </div>
+          <div class="chart-wrap" id="intradayChart"></div>
+        </div>
+      </div>
+      <div class="spotlight-figure">
+        <div class="s-label"><span class="accent-draw"></span>Brecha paralelo vs. TCO venta</div>
+        <div class="s-row">
+          <div class="s-value" id="spotlightValue">—</div>
+          <div id="spotlightChipWrap"></div>
+        </div>
+        <div class="s-context" id="spotlightContext"></div>
       </div>
     </div>
   </div>
@@ -328,10 +356,6 @@
     </div>
     <p class="context-note" id="ctxTco"></p>
     <div class="card">
-      <div class="controls" style="margin-bottom:10px;">
-        <button class="pill ghost" id="toggleBands" data-active="0">Bandas GARCH</button>
-        <button class="pill ghost" id="toggleForecast" data-active="0">Pronóstico (5 días)</button>
-      </div>
       <div class="chart-wrap" id="mainChart"></div>
       <div class="legend" id="mainLegend" style="margin-top:8px;"></div>
     </div>
@@ -393,7 +417,7 @@
   <section class="reveal">
     <div class="section-head">
       <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">06</span><h2>En la prensa</h2></div>
-      <span class="hint">Actualizado a diario</span>
+      <span class="hint" id="newsHint">Noticias de hoy</span>
     </div>
     <div class="card">
       <div class="news-list" id="newsList"></div>
@@ -403,7 +427,7 @@
 
   <footer class="reveal">
     <p class="sources">Fuentes: Banco Central de Bolivia (BCB), Binance (cotización de mercado paralelo USDT/BOB) y El Deber (titulares de economía).</p>
-    <p>Este tablero es un borrador de diseño construido sobre una base histórica compilada hasta el 17 de septiembre de 2026. Todavía no está conectado a una actualización diaria automática. Los datos de bandas GARCH y pronóstico son estimaciones estadísticas derivadas de la serie del TCO, no cifras publicadas por el BCB.</p>
+    <p>El tipo de cambio paralelo (USDT/BOB) se actualiza en vivo cada 15 minutos. El resto de los datos — TCO oficial, tipo de cambio por banco, reservas internacionales, balanza cambiaria e índice de tipo de cambio real — se actualiza periódicamente cada 3 horas, directamente desde las fuentes oficiales.</p>
   </footer>
 
 </div>
@@ -552,6 +576,10 @@
       if(last && opts.endpointDots!==false){
         svgParts.push('<circle cx="'+last[0]+'" cy="'+last[1]+'" r="3.5" fill="'+s.color+'"/>');
       }
+      // punto que sigue al cursor sobre la línea (oculto hasta el primer hover)
+      if(s.tooltip!==false){
+        svgParts.push('<circle class="hover-dot" data-key="'+s.key+'" cx="0" cy="0" r="4" fill="'+s.color+'" stroke="var(--surface,#fff)" stroke-width="1.5" style="opacity:0;pointer-events:none;"/>');
+      }
     });
 
     // hover capture
@@ -573,9 +601,15 @@
         idx = Math.max(0, Math.min(n-1, idx));
         self2.showTooltip(idx, x(idx), rect);
       });
-      hoverRect.addEventListener('mouseleave', function(){ tooltipEl.classList.remove('show'); });
+      hoverRect.addEventListener('mouseleave', function(){
+        tooltipEl.classList.remove('show');
+        if(self2._hoverDots){
+          Array.prototype.forEach.call(self2._hoverDots, function(dot){ dot.style.opacity = '0'; });
+        }
+      });
     }
-    this._x = x; this._n = n; this._data = data;
+    this._x = x; this._y = y; this._n = n; this._data = data;
+    this._hoverDots = svgEl.querySelectorAll('.hover-dot');
   };
   LineChart.prototype.showTooltip = function(idx, xpx, rectPx){
     var opts = this.opts, data = this.opts.data, row = data[idx];
@@ -602,6 +636,18 @@
     tooltipEl.style.left = relX + 'px';
     tooltipEl.style.top = '0px';
     tooltipEl.classList.add('show');
+    // mover el puntito de cada línea a su valor exacto en este índice
+    if(this._hoverDots && this._y){
+      var yFn = this._y;
+      Array.prototype.forEach.call(this._hoverDots, function(dot){
+        var key = dot.getAttribute('data-key');
+        var v = row[key];
+        if(v == null){ dot.style.opacity = '0'; return; }
+        dot.setAttribute('cx', xpx);
+        dot.setAttribute('cy', yFn(v));
+        dot.style.opacity = '1';
+      });
+    }
   };
 
   function animateLineDrawIn(svgEl){
@@ -736,15 +782,12 @@
     var lastRes = res[res.length-1];
     var deltaCompra = lastTco.tco_compra_bcb - prevTco.tco_compra_bcb;
 
-    var fc = DATA.forecast[DATA.forecast.length-1];
-
     var items = [
       {label:'TCO compra BCB', value: fmtNum.format(lastTco.tco_compra_bcb), sub: fmtDate(lastTco.date), delta: deltaCompra},
       {label:'TCO venta BCB', value: fmtNum.format(lastTco.tco_venta_bcb), sub: fmtDate(lastTco.date)},
       {label:'USDT/BOB paralelo', value: fmtNum.format(lastUsdt.usdt_bob), sub: fmtDate(lastUsdt.date), accent:true},
       {label:'Reservas brutas BCB', value: fmtInt.format(lastRes.neta)+' M', sub:'USD · '+fmtDate(lastRes.date), accent:true},
     ];
-    if(fc){ items.push({label:'Pronóstico TCO ('+fmtDateShort(fc.date)+')', value: fmtNum.format(fc.forecast), sub:'P10 '+fmtNum.format(fc.p10)+' · P90 '+fmtNum.format(fc.p90)}); }
 
     var kpiRowEl = document.getElementById('kpiRow');
     kpiRowEl.innerHTML = items.map(statTile).join('');
@@ -810,6 +853,28 @@
     animateNumber(document.getElementById('spotlightValue'), brecha, {decimals:1, suffix:'%', signed:true, duration:900});
     document.getElementById('spotlightChipWrap').innerHTML = chipHtml;
     document.getElementById('spotlightContext').textContent = 'USDT/BOB '+fmtNum.format(lastUsdt.usdt_bob)+' · TCO venta '+fmtNum.format(lastTco.tco_venta_bcb)+' · '+fmtDate(lastTco.date);
+
+    // TCO oficial BCB y USDT/BOB paralelo como datos centrales (mismo
+    // tratamiento visual que la brecha, con su propia variación a 7 días)
+    var tcoChip = sevenDayChip(lastTco.tco_venta_bcb, tco, 'tco_venta_bcb', lastTco.date);
+    animateNumber(document.getElementById('tcoValue'), lastTco.tco_venta_bcb, {decimals:2, duration:900});
+    document.getElementById('tcoChipWrap').innerHTML = tcoChip;
+    document.getElementById('tcoContext').textContent = 'Compra Bs '+fmtNum.format(lastTco.tco_compra_bcb)+' · '+fmtDate(lastTco.date);
+
+    var usdtChip = sevenDayChip(lastUsdt.usdt_bob, usdt, 'usdt_bob', lastUsdt.date);
+    animateNumber(document.getElementById('usdtValue'), lastUsdt.usdt_bob, {decimals:2, duration:900});
+    document.getElementById('usdtChipWrap').innerHTML = usdtChip;
+    document.getElementById('usdtContext').textContent = fmtDate(lastUsdt.date);
+  }
+
+  function sevenDayChip(currentVal, series, valueField, refDate){
+    var target7 = daysAgo(refDate, 7);
+    var prevRow = findOnOrBefore(series, 'date', target7);
+    if(!prevRow || prevRow[valueField] == null) return '';
+    var delta = currentVal - prevRow[valueField];
+    if(Math.abs(delta) <= 0.0001) return '';
+    var up = delta > 0;
+    return '<div class="s-chip '+(up?'up':'down')+'">'+(up?'▲':'▼')+' '+fmtNum.format(Math.abs(delta))+' Bs vs. hace 7 días</div>';
   }
 
   function parseUtcTs(ts){
@@ -967,37 +1032,20 @@
     el.textContent = txt;
   }
 
-  var mainChart, mainRangeFrom = null, showBands=false, showForecast=false;
+  var mainChart, mainRangeFrom = null;
   function buildMainRows(){
     var tcoRows = filterFrom(DATA.tco, mainRangeFrom);
     var usdtByDate = {}; DATA.usdt.forEach(function(d){ usdtByDate[d.date]=d.usdt_bob; });
-    var garchByDate = {}; DATA.garch.forEach(function(d){ garchByDate[d.date]=d; });
-    var rows = tcoRows.map(function(d){
-      var row = {date:d.date, tco_compra_bcb:d.tco_compra_bcb, tco_venta_bcb:d.tco_venta_bcb, usdt_bob: usdtByDate[d.date]};
-      if(showBands && garchByDate[d.date]){
-        var g = garchByDate[d.date];
-        row.g_lo2 = g.lo2; row.g_hi2 = g.hi2; row.g_lo1 = g.lo1; row.g_hi1 = g.hi1;
-      }
-      return row;
+    return tcoRows.map(function(d){
+      return {date:d.date, tco_compra_bcb:d.tco_compra_bcb, tco_venta_bcb:d.tco_venta_bcb, usdt_bob: usdtByDate[d.date]};
     });
-    if(showForecast){
-      DATA.forecast.forEach(function(f){
-        rows.push({date:f.date, forecast:f.forecast, fc_lo:f.p10, fc_hi:f.p90});
-      });
-    }
-    return rows;
   }
   function renderMainChart(){
-    var series = [];
-    if(showBands){
-      series.push({key:'g_lo2', key2:'g_hi2', type:'band', color:'var(--band)'});
-    }
-    series.push({key:'tco_compra_bcb', label:'TCO compra BCB', color:'var(--accent)', width:2.25});
-    series.push({key:'tco_venta_bcb', label:'TCO venta BCB', color:'var(--accent-ink)', width:1.5, dashed:true});
-    series.push({key:'usdt_bob', label:'USDT/BOB paralelo', color:'var(--series-paralelo)', width:2});
-    if(showForecast){
-      series.push({key:'forecast', label:'Pronóstico TCO compra', color:'var(--forecast)', width:2, dashed:true});
-    }
+    var series = [
+      {key:'tco_compra_bcb', label:'TCO compra BCB', color:'var(--accent)', width:2.25},
+      {key:'tco_venta_bcb', label:'TCO venta BCB', color:'var(--accent-ink)', width:1.5, dashed:true},
+      {key:'usdt_bob', label:'USDT/BOB paralelo', color:'var(--series-paralelo)', width:2},
+    ];
     var rows = buildMainRows();
     if(!mainChart){
       mainChart = new LineChart('mainChart', {series:series, data:rows, height:280, yFormat:function(v){return v.toFixed(2);}});
@@ -1009,8 +1057,6 @@
       legendItem('var(--accent-ink)','TCO venta BCB', true),
       legendItem('var(--series-paralelo)','USDT/BOB paralelo'),
     ];
-    if(showBands) legend.push(legendItem('var(--band)','Banda GARCH (±2σ)'));
-    if(showForecast) legend.push(legendItem('var(--forecast)','Pronóstico TimesFM', true));
     document.getElementById('mainLegend').innerHTML = legend.join('');
   }
 
@@ -1033,19 +1079,28 @@
     }
     btns.forEach(function(b,i){ b.addEventListener('click', function(){ setActive(i); }); });
     setActive(2);
-
-    document.getElementById('toggleBands').addEventListener('click', function(){
-      showBands = !showBands;
-      this.classList.toggle('active', showBands);
-      renderMainChart();
-    });
-    document.getElementById('toggleForecast').addEventListener('click', function(){
-      showForecast = !showForecast;
-      this.classList.toggle('active', showForecast);
-      renderMainChart();
-    });
   }
 
+  // Colores representativos de cada banco (identidad de marca). Donde no se
+  // pudo confirmar el color oficial exacto se usó un tono razonable y
+  // diferenciado del resto - conviene que Banca Empresas los revise y ajuste
+  // si alguno no coincide con el manual de marca real.
+  var BANK_COLORS = {
+    'Banco BISA': '#003C71',
+    'Banco Economico': '#ED1C24',
+    'Banco FIE': '#DF1583',
+    'Banco Fortaleza': '#7A1F3D',
+    'Banco Ganadero': '#2E7D32',
+    'Banco Mercantil Santa Cruz': '#C0392B',
+    'Banco Nacional de Bolivia': '#00A651',
+    'Banco PRODEM': '#F57C00',
+    'Banco PyME Ecofuturo': '#7CB342',
+    'Banco PyME de la Comunidad': '#00838F',
+    'Banco Solidario': '#46009B',
+    'Banco Union': '#005E9E',
+    'Banco de Credito': '#F7941D',
+    'Banco de la Nacion Argentina': '#75AADB',
+  };
   var SISTEMA_KEY = '__SISTEMA__', SISTEMA_LABEL = 'Sistema financiero';
   var bankChart, selectedBank = SISTEMA_KEY;
   function getBankSeries(key){
@@ -1099,7 +1154,9 @@
       return {key:n, label:n.replace('Banco ','')};
     }));
     btnRow.innerHTML = opts.map(function(o){
-      return '<button class="pill'+(o.sistema?' pill-sistema':'')+(o.key===selectedBank?' active':'')+'" data-bank="'+o.key+'">'+o.label+'</button>';
+      var cls = 'pill'+(o.sistema?' pill-sistema':' pill-bank')+(o.key===selectedBank?' active':'');
+      var style = (!o.sistema && BANK_COLORS[o.key]) ? ' style="--b:'+BANK_COLORS[o.key]+'"' : '';
+      return '<button class="'+cls+'"'+style+' data-bank="'+o.key+'">'+o.label+'</button>';
     }).join('');
     btnRow.querySelectorAll('.pill').forEach(function(b){
       b.addEventListener('click', function(){
@@ -1124,9 +1181,10 @@
       ];
     } else {
       rows = bankSeries.map(function(d){ return {date:d.date, rate:d.rate, avg:avgByDate[d.date]}; });
+      var bankColor = BANK_COLORS[selectedBank] || 'var(--accent)';
       series = [
         {key:'avg', label:'Promedio sistema', color:'var(--series-avg)', width:1.5, dashed:true, tooltip:true},
-        {key:'rate', label:label, color:'var(--accent)', width:2.25},
+        {key:'rate', label:label, color:bankColor, width:2.25},
       ];
     }
     if(!bankChart){
@@ -1137,7 +1195,7 @@
     document.getElementById('bankLegend').innerHTML = isSistema ? [
       legendItem('var(--ingreso)', label),
     ].join('') : [
-      legendItem('var(--accent)', label),
+      legendItem(BANK_COLORS[selectedBank] || 'var(--accent)', label),
       legendItem('var(--series-avg)', 'Promedio sistema', true),
     ].join('');
 
@@ -1269,8 +1327,13 @@
     var upd = document.getElementById('newsUpdated');
     if(upd){
       upd.textContent = news.updated
-        ? 'Titulares filtrados automáticamente del feed de Economía de El Deber por palabras clave (tipo de cambio, reservas, FMI, subsidios, etc.); la bajada de cada nota es la que publica el propio medio. Última actualización: '+fmtDate(news.updated)+'.'
-        : 'Titulares filtrados automáticamente del feed de Economía de El Deber por palabras clave; la bajada de cada nota es la que publica el propio medio.';
+        ? 'Titulares filtrados automáticamente del sitio de El Deber por palabras clave (tipo de cambio, reservas, FMI, subsidios, etc.); la bajada de cada nota es la que publica el propio medio. Última actualización: '+fmtDate(news.updated)+'.'
+        : 'Titulares filtrados automáticamente del sitio de El Deber por palabras clave; la bajada de cada nota es la que publica el propio medio.';
+    }
+    var hintEl = document.getElementById('newsHint');
+    if(hintEl && news.updated){
+      var todayStr = new Date().toISOString().slice(0,10);
+      hintEl.textContent = (news.updated === todayStr ? 'Noticias de hoy · ' : 'Última actualización: ') + fmtDate(news.updated);
     }
   }
 
