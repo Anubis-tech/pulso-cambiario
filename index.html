@@ -1144,7 +1144,7 @@
     var withMonto = today.filter(function(d){ return d.monto != null; });
     if(withMonto.length){
       withMonto.sort(function(a,b){ return b.monto - a.monto; });
-      var mostVol = withMonto[withMonto.length-1], leastVol = withMonto[0];
+      var mostVol = withMonto[0], leastVol = withMonto[withMonto.length-1];
       stats.push({label:'Mayor volumen', value:'$us '+fmtInt.format(mostVol.monto), sub: mostVol.name+' · '+fmtDate(lastDate)});
       stats.push({label:'Menor volumen', value:'$us '+fmtInt.format(leastVol.monto), sub: leastVol.name+' · '+fmtDate(lastDate)});
     }
