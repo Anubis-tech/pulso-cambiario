@@ -1102,7 +1102,12 @@
     'Banco de la Nacion Argentina': '#75AADB',
   };
   // Algunos nombres del dataset se muestran con una etiqueta comercial distinta.
-  var BANK_LABELS = { 'Banco de Credito': 'BCP' };
+  var BANK_LABELS = {
+    'Banco de Credito': 'BCP',
+    'Banco Mercantil Santa Cruz': 'Mercantil BMSC',
+    'Banco Nacional de Bolivia': 'Nacional - BNB',
+    'Banco Solidario': 'SOL',
+  };
   function bankLabel(name){ return BANK_LABELS[name] || name.replace('Banco ',''); }
   var SISTEMA_KEY = '__SISTEMA__', SISTEMA_LABEL = 'Sistema financiero';
   var bankChart, selectedBank = SISTEMA_KEY;
