@@ -1152,9 +1152,21 @@
     applyStagger(el, 70);
   }
 
+  // Orden de despliegue de los botones de banco: igual al del dataset, salvo
+  // por pares cuyo color quedaría muy parecido si se muestran uno al lado
+  // del otro (Mercantil BMSC / PyME Ecofuturo).
+  var BANK_DISPLAY_SWAPS = [['Banco Mercantil Santa Cruz', 'Banco PyME Ecofuturo']];
+  function displayBankOrder(names){
+    var ordered = names.slice();
+    BANK_DISPLAY_SWAPS.forEach(function(pair){
+      var i = ordered.indexOf(pair[0]), j = ordered.indexOf(pair[1]);
+      if(i > -1 && j > -1){ var tmp = ordered[i]; ordered[i] = ordered[j]; ordered[j] = tmp; }
+    });
+    return ordered;
+  }
   function renderBankSection(){
     var btnRow = document.getElementById('bankButtons');
-    var names = DATA.bank_names;
+    var names = displayBankOrder(DATA.bank_names);
     var opts = [{key:SISTEMA_KEY, label:SISTEMA_LABEL, sistema:true}].concat(names.map(function(n){
       return {key:n, label:bankLabel(n)};
     }));
