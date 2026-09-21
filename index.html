@@ -955,7 +955,7 @@
       var s = DATA.banks[n] || [];
       var last = s.length ? s[s.length-1] : null;
       if(last && last.date === lastDate && last.rate != null){
-        today.push({name:n.replace('Banco ',''), rate:last.rate});
+        today.push({name:bankLabel(n), rate:last.rate});
       }
     });
     if(today.length < 2) return;
@@ -1086,21 +1086,24 @@
   // diferenciado del resto - conviene que Banca Empresas los revise y ajuste
   // si alguno no coincide con el manual de marca real.
   var BANK_COLORS = {
-    'Banco BISA': '#003C71',
+    'Banco BISA': '#F5B700',
     'Banco Economico': '#ED1C24',
     'Banco FIE': '#DF1583',
-    'Banco Fortaleza': '#7A1F3D',
+    'Banco Fortaleza': '#0B2E59',
     'Banco Ganadero': '#2E7D32',
-    'Banco Mercantil Santa Cruz': '#C0392B',
+    'Banco Mercantil Santa Cruz': '#00897B',
     'Banco Nacional de Bolivia': '#00A651',
-    'Banco PRODEM': '#F57C00',
-    'Banco PyME Ecofuturo': '#7CB342',
-    'Banco PyME de la Comunidad': '#00838F',
+    'Banco PRODEM': '#7CB342',
+    'Banco PyME Ecofuturo': '#F57C00',
+    'Banco PyME de la Comunidad': '#D4A017',
     'Banco Solidario': '#46009B',
     'Banco Union': '#005E9E',
     'Banco de Credito': '#F7941D',
     'Banco de la Nacion Argentina': '#75AADB',
   };
+  // Algunos nombres del dataset se muestran con una etiqueta comercial distinta.
+  var BANK_LABELS = { 'Banco de Credito': 'BCP' };
+  function bankLabel(name){ return BANK_LABELS[name] || name.replace('Banco ',''); }
   var SISTEMA_KEY = '__SISTEMA__', SISTEMA_LABEL = 'Sistema financiero';
   var bankChart, selectedBank = SISTEMA_KEY;
   function getBankSeries(key){
@@ -1121,27 +1124,24 @@
     names.forEach(function(n){
       var s = DATA.banks[n] || [];
       var last = s.length ? s[s.length-1] : null;
-      if(last && last.date === lastDate && last.rate != null){
-        today.push({name:n.replace('Banco ',''), rate:last.rate});
+      if(last && last.date === lastDate){
+        today.push({name:bankLabel(n), rate:last.rate, monto:last.monto});
       }
     });
     var stats = [];
-    if(today.length){
-      today.sort(function(a,b){ return b.rate - a.rate; });
-      var top = today[0], bottom = today[today.length-1];
-      stats.push({label:'Banco líder hoy', value: fmtNum.format(top.rate), sub: top.name+' · '+fmtDate(lastDate), accent:true});
-      stats.push({label:'Dispersión bancaria', value: fmtNum.format(top.rate-bottom.rate)+' Bs', sub: top.name+' vs. '+bottom.name});
+    var withRate = today.filter(function(d){ return d.rate != null; });
+    if(withRate.length){
+      withRate.sort(function(a,b){ return b.rate - a.rate; });
+      var top = withRate[0], bottom = withRate[withRate.length-1];
+      stats.push({label:'Banco más alto hoy', value: fmtNum.format(top.rate), sub: top.name+' · '+fmtDate(lastDate), accent:true});
+      stats.push({label:'Banco más bajo hoy', value: fmtNum.format(bottom.rate), sub: bottom.name+' · '+fmtDate(lastDate)});
     }
-    var montoAgg = DATA.aggregates['Bancos (montos totales)'] || [];
-    if(montoAgg.length){
-      var ytd = montoAgg.filter(function(d){ return d.date >= '2026-01-01' && d.monto != null; })
-                         .reduce(function(a,d){ return a+d.monto; }, 0);
-      stats.push({label:'Monto acumulado 2026', value:'$us '+fmtInt.format(ytd), sub:'Desde el 1 de enero'});
-      var window20 = montoAgg.slice(-20).map(function(d){ return d.monto; }).filter(function(v){ return v!=null; });
-      if(window20.length){
-        var avg20 = window20.reduce(function(a,v){ return a+v; },0)/window20.length;
-        stats.push({label:'Promedio móvil (20 días)', value:'$us '+fmtInt.format(avg20), sub:'Monto diario negociado'});
-      }
+    var withMonto = today.filter(function(d){ return d.monto != null; });
+    if(withMonto.length){
+      withMonto.sort(function(a,b){ return b.monto - a.monto; });
+      var mostVol = withMonto[withMonto.length-1], leastVol = withMonto[0];
+      stats.push({label:'Mayor volumen', value:'$us '+fmtInt.format(mostVol.monto), sub: mostVol.name+' · '+fmtDate(lastDate)});
+      stats.push({label:'Menor volumen', value:'$us '+fmtInt.format(leastVol.monto), sub: leastVol.name+' · '+fmtDate(lastDate)});
     }
     el.innerHTML = stats.map(statTile).join('');
     applyStagger(el, 70);
@@ -1151,7 +1151,7 @@
     var btnRow = document.getElementById('bankButtons');
     var names = DATA.bank_names;
     var opts = [{key:SISTEMA_KEY, label:SISTEMA_LABEL, sistema:true}].concat(names.map(function(n){
-      return {key:n, label:n.replace('Banco ','')};
+      return {key:n, label:bankLabel(n)};
     }));
     btnRow.innerHTML = opts.map(function(o){
       var cls = 'pill'+(o.sistema?' pill-sistema':' pill-bank')+(o.key===selectedBank?' active':'');
@@ -1172,12 +1172,12 @@
     var avgSeries = DATA.aggregates['Bancos (promedio ponderado)'] || [];
     var avgByDate = {}; avgSeries.forEach(function(d){ avgByDate[d.date]=d.rate; });
     var bankSeries = getBankSeries(selectedBank);
-    var label = isSistema ? SISTEMA_LABEL+' (promedio ponderado)' : selectedBank;
+    var label = isSistema ? SISTEMA_LABEL+' (promedio ponderado)' : bankLabel(selectedBank);
     var rows, series;
     if(isSistema){
       rows = bankSeries.map(function(d){ return {date:d.date, rate:d.rate}; });
       series = [
-        {key:'rate', label:label, color:'var(--ingreso)', width:2.25},
+        {key:'rate', label:label, color:'var(--accent)', width:2.25},
       ];
     } else {
       rows = bankSeries.map(function(d){ return {date:d.date, rate:d.rate, avg:avgByDate[d.date]}; });
@@ -1193,7 +1193,7 @@
       bankChart.opts.series = series; bankChart.opts.data = rows; bankChart.render();
     }
     document.getElementById('bankLegend').innerHTML = isSistema ? [
-      legendItem('var(--ingreso)', label),
+      legendItem('var(--accent)', label),
     ].join('') : [
       legendItem(BANK_COLORS[selectedBank] || 'var(--accent)', label),
       legendItem('var(--series-avg)', 'Promedio sistema', true),
