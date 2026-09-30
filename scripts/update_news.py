@@ -16,8 +16,17 @@ Trade-offs conocidos de este enfoque (aceptados explícitamente):
   - Los links son redirecciones de Google (news.google.com/rss/articles/...),
     no la URL directa del medio. Al abrirlos, el navegador sí termina en la
     nota original.
-  - Google News no entrega imagen de portada (no hay <enclosure> en su feed),
-    así que las noticias se muestran sin miniatura.
+  - Google News casi nunca entrega imagen de portada en el propio feed (no
+    hay <enclosure>, y <media:content> aparece en pocos items) - por eso,
+    para los 5 titulares finalmente elegidos (no para todos los candidatos,
+    para no hacer decenas de requests de más), se intenta además seguir el
+    link y sacar la imagen real de la nota original desde las etiquetas
+    <meta property="og:image"> / <meta name="twitter:image"> de su HTML -
+    el mismo mecanismo que usan las previsualizaciones de links de
+    WhatsApp/Twitter/etc. Si el link de Google no llega a resolver a la nota
+    real (a veces requiere JavaScript) o la nota no publica esas etiquetas,
+    simplemente se deja sin miniatura - nunca se inventa o adivina una
+    imagen.
   - La <description> de Google News es HTML de previsualización (el mismo
     título envuelto en un <a>, más el nombre del medio) y NO es un resumen
     real de la nota - por eso acá NO se usa como "bajada": se deja vacía en
@@ -31,7 +40,7 @@ import json
 import re
 import sys
 from datetime import datetime, timezone
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 from xml.etree import ElementTree
 
 import requests
@@ -150,6 +159,55 @@ def clean_title(title_raw, source_name):
     return title
 
 
+# Busca <meta property="og:image" content="..."> o su equivalente de Twitter,
+# aceptando los dos órdenes posibles de atributos dentro del tag.
+_OG_IMAGE_PATTERNS = [
+    re.compile(r'<meta[^>]+property=["\']og:image["\'][^>]*\scontent=["\']([^"\']+)["\']', re.IGNORECASE),
+    re.compile(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]*\sproperty=["\']og:image["\']', re.IGNORECASE),
+    re.compile(r'<meta[^>]+name=["\']twitter:image["\'][^>]*\scontent=["\']([^"\']+)["\']', re.IGNORECASE),
+    re.compile(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]*\sname=["\']twitter:image["\']', re.IGNORECASE),
+]
+
+
+def _is_google_host(url):
+    host = urlparse(url).netloc.lower()
+    return "google.com" in host or "gstatic.com" in host or "googleusercontent.com" in host
+
+
+def fetch_og_image(url):
+    """Sigue el link (puede ser una redirección de Google News) e intenta
+    sacar la imagen de portada real de la nota desde sus meta tags og:image /
+    twitter:image. Devuelve None ante cualquier problema (nota bloqueada,
+    sin esas etiquetas, o el link de Google que no llegó a resolver a la
+    nota real) - nunca inventa una imagen. Pensado para correr solo sobre
+    los 5 titulares ya elegidos, no sobre todos los candidatos del feed."""
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=10, allow_redirects=True)
+        r.raise_for_status()
+    except Exception:
+        return None
+
+    # Si el link de Google no terminó de redirigir a la nota real (algunas
+    # rutas de Google News necesitan JavaScript para el salto final), lo que
+    # tenemos es HTML de Google, no del medio - ahí no hay imagen real que
+    # sacar.
+    if _is_google_host(r.url):
+        return None
+
+    html = r.text
+    for pattern in _OG_IMAGE_PATTERNS:
+        m = pattern.search(html)
+        if not m:
+            continue
+        image_url = m.group(1).strip()
+        if not image_url.startswith("http"):
+            continue
+        if _is_google_host(image_url):
+            continue
+        return image_url
+    return None
+
+
 def main():
     log(f"Descargando RSS de Google News: {RSS_URL}")
     try:
@@ -218,6 +276,20 @@ def main():
     chosen = candidates[:MAX_ITEMS]
     for c in chosen:
         del c["_pub_date"]
+
+    # Para los elegidos que no trajeron imagen del feed (la gran mayoría),
+    # se intenta sacar la imagen real de la nota siguiendo el link - esto
+    # agrega hasta MAX_ITEMS requests extra, por eso se hace solo acá y no
+    # sobre todos los candidatos.
+    found_images = 0
+    for item in chosen:
+        if item.get("image"):
+            found_images += 1
+            continue
+        item["image"] = fetch_og_image(item["url"])
+        if item["image"]:
+            found_images += 1
+    log(f"  Miniaturas encontradas: {found_images}/{len(chosen)}.")
 
     if not chosen:
         log("ADVERTENCIA: ningún titular del RSS coincidió con las palabras clave "
