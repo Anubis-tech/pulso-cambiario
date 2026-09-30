@@ -13,18 +13,23 @@ a la vez y es mucho más difícil que bloquee IPs de nubes como la de GitHub
 Actions.
 
 Trade-offs conocidos de este enfoque (aceptados explícitamente):
-  - Los links son redirecciones de Google (news.google.com/rss/articles/...),
-    no la URL directa del medio. Al abrirlos, el navegador sí termina en la
-    nota original.
-  - Google News casi nunca entrega imagen de portada en el propio feed (no
-    hay <enclosure>, y <media:content> aparece en pocos items) - por eso,
-    para los 5 titulares finalmente elegidos (no para todos los candidatos,
-    para no hacer decenas de requests de más), se intenta además seguir el
-    link y sacar la imagen real de la nota original desde las etiquetas
-    <meta property="og:image"> / <meta name="twitter:image"> de su HTML -
-    el mismo mecanismo que usan las previsualizaciones de links de
-    WhatsApp/Twitter/etc. Si el link de Google no llega a resolver a la nota
-    real (a veces requiere JavaScript) o la nota no publica esas etiquetas,
+  - Los links del feed son redirecciones de Google
+    (news.google.com/rss/articles/...), no la URL directa del medio. El
+    navegador sí termina en la nota original porque ejecuta el JavaScript de
+    Google que hace ese salto - pero un simple "seguir la redirección" por
+    HTTP (sin JavaScript) se queda parado en news.google.com, confirmado en
+    producción (log real: "no redirigió fuera de Google" en los 5 casos).
+    Por eso, solo para los 5 titulares finalmente elegidos (no para todos
+    los candidatos, para no hacer decenas de requests de más), se usa la
+    librería googlenewsdecoder, que reproduce el mismo mecanismo interno que
+    usa el JavaScript de Google (una firma/timestamp que hay que pedirle a
+    Google y después confirmarle) para conseguir la URL real de la nota sin
+    necesitar un navegador.
+  - Una vez resuelta la URL real, se le saca la imagen de portada desde sus
+    etiquetas <meta property="og:image"> / <meta name="twitter:image"> - el
+    mismo mecanismo que usan las previsualizaciones de links de
+    WhatsApp/Twitter/etc. Si Google no llega a resolver el link (puede pasar
+    si cambia su mecanismo interno) o el medio no publica esas etiquetas,
     simplemente se deja sin miniatura - nunca se inventa o adivina una
     imagen.
   - La <description> de Google News es HTML de previsualización (el mismo
@@ -44,6 +49,15 @@ from urllib.parse import quote, urlparse
 from xml.etree import ElementTree
 
 import requests
+
+try:
+    from googlenewsdecoder import gnewsdecoder
+except ImportError:
+    # Si por algún motivo el paquete no está instalado (falta en
+    # requirements.txt, falló la instalación, etc.), nunca se cae el
+    # pipeline por esto - simplemente no se resuelven links de Google y las
+    # noticias quedan sin miniatura, exactamente como antes de este cambio.
+    gnewsdecoder = None
 
 # Búsqueda de Google News: términos de tipo de cambio / BCB / reservas / FMI /
 # subvenciones. El "Bolivia" suelto al final NO alcanza para acotar a medios
@@ -175,12 +189,11 @@ def _is_google_host(url):
 
 
 def fetch_og_image(url):
-    """Sigue el link (puede ser una redirección de Google News) e intenta
-    sacar la imagen de portada real de la nota desde sus meta tags og:image /
-    twitter:image. Devuelve (imagen_o_None, motivo) - el motivo es solo para
-    diagnóstico en los logs, nunca se guarda en noticias.json. Nunca inventa
-    una imagen. Pensado para correr solo sobre los 5 titulares ya elegidos,
-    no sobre todos los candidatos del feed."""
+    """Recibe la URL YA RESUELTA de la nota (la real del medio, no el link de
+    Google News - eso se resuelve antes, con gnewsdecoder) y le saca la
+    imagen de portada desde sus meta tags og:image / twitter:image. Devuelve
+    (imagen_o_None, motivo) - el motivo es solo para diagnóstico en los logs,
+    nunca se guarda en noticias.json. Nunca inventa una imagen."""
     try:
         r = requests.get(url, headers=HEADERS, timeout=10, allow_redirects=True)
     except Exception as e:
@@ -191,12 +204,11 @@ def fetch_og_image(url):
 
     final_host = urlparse(r.url).netloc.lower()
 
-    # Si el link de Google no terminó de redirigir a la nota real (algunas
-    # rutas de Google News necesitan JavaScript para el salto final), lo que
-    # tenemos es HTML de Google, no del medio - ahí no hay imagen real que
-    # sacar.
+    # No debería pasar (la URL ya viene resuelta), pero por las dudas: si de
+    # algún modo terminamos igual en un dominio de Google, no hay imagen real
+    # del medio que sacar ahí.
     if _is_google_host(r.url):
-        return None, f"no redirigió fuera de Google (quedó en {final_host})"
+        return None, f"terminó en un dominio de Google (quedó en {final_host})"
 
     html = r.text
     for pattern in _OG_IMAGE_PATTERNS:
@@ -281,17 +293,42 @@ def main():
     for c in chosen:
         del c["_pub_date"]
 
-    # Para los elegidos que no trajeron imagen del feed (la gran mayoría),
-    # se intenta sacar la imagen real de la nota siguiendo el link - esto
-    # agrega hasta MAX_ITEMS requests extra, por eso se hace solo acá y no
-    # sobre todos los candidatos.
+    # Para los elegidos que no trajeron imagen del feed (la gran mayoría), se
+    # intenta sacar la imagen real de la nota. Primero hay que resolver la
+    # URL real detrás del link de Google News (ver docstring del módulo);
+    # se hace en un solo lote (una llamada a gnewsdecoder con las hasta
+    # MAX_ITEMS URLs pendientes) en vez de una por una, para no multiplicar
+    # los requests a Google.
+    needing_image = [item for item in chosen if not item.get("image")]
+    real_urls = {}
+    if needing_image and gnewsdecoder is None:
+        log("  ADVERTENCIA: googlenewsdecoder no está instalado - no se pueden "
+            "resolver los links de Google News, las noticias quedan sin miniatura.")
+    elif needing_image:
+        try:
+            decoded_list = gnewsdecoder([it["url"] for it in needing_image], timeout=10.0)
+        except Exception as e:
+            log(f"  ADVERTENCIA: falló la resolución de links de Google News ({e}).")
+            decoded_list = None
+        if decoded_list is not None:
+            for item, decoded in zip(needing_image, decoded_list):
+                if decoded.get("success"):
+                    real_urls[item["url"]] = decoded["decoded_url"]
+                else:
+                    log(f"    - {item['title'][:70]!r}: no se pudo resolver el link "
+                        f"de Google News ({decoded.get('message', 'sin detalle')})")
+
     found_images = 0
     for item in chosen:
         if item.get("image"):
             found_images += 1
             log(f"    - {item['title'][:70]!r}: imagen ya venía en el feed (media:content)")
             continue
-        image_url, reason = fetch_og_image(item["url"])
+        real_url = real_urls.get(item["url"])
+        if not real_url:
+            item["image"] = None
+            continue
+        image_url, reason = fetch_og_image(real_url)
         item["image"] = image_url
         estado = "imagen encontrada" if image_url else "SIN imagen"
         log(f"    - {item['title'][:70]!r}: {estado} - {reason}")
