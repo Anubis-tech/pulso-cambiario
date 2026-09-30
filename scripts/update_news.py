@@ -177,22 +177,26 @@ def _is_google_host(url):
 def fetch_og_image(url):
     """Sigue el link (puede ser una redirección de Google News) e intenta
     sacar la imagen de portada real de la nota desde sus meta tags og:image /
-    twitter:image. Devuelve None ante cualquier problema (nota bloqueada,
-    sin esas etiquetas, o el link de Google que no llegó a resolver a la
-    nota real) - nunca inventa una imagen. Pensado para correr solo sobre
-    los 5 titulares ya elegidos, no sobre todos los candidatos del feed."""
+    twitter:image. Devuelve (imagen_o_None, motivo) - el motivo es solo para
+    diagnóstico en los logs, nunca se guarda en noticias.json. Nunca inventa
+    una imagen. Pensado para correr solo sobre los 5 titulares ya elegidos,
+    no sobre todos los candidatos del feed."""
     try:
         r = requests.get(url, headers=HEADERS, timeout=10, allow_redirects=True)
-        r.raise_for_status()
-    except Exception:
-        return None
+    except Exception as e:
+        return None, f"error de red ({type(e).__name__})"
+
+    if r.status_code != 200:
+        return None, f"status HTTP {r.status_code}"
+
+    final_host = urlparse(r.url).netloc.lower()
 
     # Si el link de Google no terminó de redirigir a la nota real (algunas
     # rutas de Google News necesitan JavaScript para el salto final), lo que
     # tenemos es HTML de Google, no del medio - ahí no hay imagen real que
     # sacar.
     if _is_google_host(r.url):
-        return None
+        return None, f"no redirigió fuera de Google (quedó en {final_host})"
 
     html = r.text
     for pattern in _OG_IMAGE_PATTERNS:
@@ -204,8 +208,8 @@ def fetch_og_image(url):
             continue
         if _is_google_host(image_url):
             continue
-        return image_url
-    return None
+        return image_url, f"encontrada en {final_host}"
+    return None, f"sin meta og:image/twitter:image en {final_host} (html: {len(html)} bytes)"
 
 
 def main():
@@ -285,9 +289,13 @@ def main():
     for item in chosen:
         if item.get("image"):
             found_images += 1
+            log(f"    - {item['title'][:70]!r}: imagen ya venía en el feed (media:content)")
             continue
-        item["image"] = fetch_og_image(item["url"])
-        if item["image"]:
+        image_url, reason = fetch_og_image(item["url"])
+        item["image"] = image_url
+        estado = "imagen encontrada" if image_url else "SIN imagen"
+        log(f"    - {item['title'][:70]!r}: {estado} - {reason}")
+        if image_url:
             found_images += 1
     log(f"  Miniaturas encontradas: {found_images}/{len(chosen)}.")
 
