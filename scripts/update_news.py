@@ -37,13 +37,20 @@ from xml.etree import ElementTree
 import requests
 
 # Búsqueda de Google News: términos de tipo de cambio / BCB / reservas / FMI /
-# subvenciones acotada a Bolivia. "OR" y comillas son operadores de búsqueda
-# de Google, igual que en news.google.com.
+# subvenciones. El "Bolivia" suelto al final NO alcanza para acotar a medios
+# bolivianos (Google igual trae notas de México/Venezuela/Colombia, porque
+# "dólar", "subsidio", etc. son términos genéricos de cualquier país) - por
+# eso además se restringe con site: a los medios bolivianos más importantes.
+# Esto es un "mejor esfuerzo" en la búsqueda; el filtro real y garantizado
+# está en is_bolivian() más abajo, que corre sobre cada resultado.
 SEARCH_QUERY = (
+    '(site:eldeber.com.bo OR site:lostiempos.com OR site:la-razon.com OR '
+    'site:paginasiete.bo OR site:eldiario.net OR site:opinion.com.bo OR '
+    'site:erbol.com.bo OR site:correodelsur.com OR site:abi.bo) '
     '("tipo de cambio" OR dolar OR dólar OR BCB OR "banco central" OR '
     'reservas OR FMI OR "banco mundial" OR "deuda externa" OR subvencion OR '
     'subvención OR subsidio OR divisas OR USDT OR cambiario OR devaluacion OR '
-    'devaluación) Bolivia'
+    'devaluación)'
 )
 RSS_URL = (
     "https://news.google.com/rss/search?q=" + quote(SEARCH_QUERY) +
@@ -70,6 +77,32 @@ KEYWORDS = [
     "importacion", "importación", "exportacion", "exportación",
     "balanza comercial", "inflacion", "inflación",
 ]
+
+# El "Bolivia" al final de SEARCH_QUERY NO garantiza que Google News solo
+# devuelva notas bolivianas - en la práctica trajo notas de México, Venezuela
+# y Colombia porque varias de las palabras clave (dólar, tipo de cambio,
+# subsidio, FMI) son genéricas y aparecen en economía de cualquier país. Por
+# eso acá se exige ADEMÁS que la nota sea de un medio boliviano conocido, o
+# que el propio título mencione "Bolivia" (para el caso de que un medio
+# internacional cubra específicamente algo boliviano).
+BOLIVIAN_OUTLETS = [
+    "el deber", "los tiempos", "la razon", "pagina siete", "opinion",
+    "el diario", "correo del sur", "erbol", "agencia de noticias fides",
+    " anf", "unitel", "red uno", "abi", "el potosi", "bolivia.com",
+    "urgente.bo", "brujula digital", "eldeber", "reduno", "bolivision",
+    "gigavision", "notibol",
+]
+
+
+def is_bolivian(title, source_name):
+    text = normalize(title)
+    if "bolivia" in text:
+        return True
+    if source_name:
+        source_norm = normalize(source_name)
+        if any(outlet in source_norm for outlet in BOLIVIAN_OUTLETS):
+            return True
+    return False
 
 
 def log(msg):
@@ -158,6 +191,8 @@ def main():
 
         title = clean_title(title_raw, source_name)
         if not matches_keywords(title):
+            continue
+        if not is_bolivian(title, source_name):
             continue
 
         # Google suele repetir la misma noticia vía varios agregadores/medios
