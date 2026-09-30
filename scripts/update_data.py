@@ -439,6 +439,11 @@ XLSX_SOURCES = {
             "netas_obligaciones": ["obligaciones"],
         },
         "max_relative_change": 0.20,
+        # El Excel del BCB trae historia desde 2002, pero para el tablero no
+        # hace falta tanta profundidad histórica - se queda solo con los
+        # últimos N años (y de paso deja de generar advertencias de
+        # sanity-check para filas muy antiguas de otra época económica).
+        "history_years": 10,
     },
     "balanza": {
         "url": "https://www.bcb.gob.bo/webdocs/sector_externo/"
@@ -501,13 +506,40 @@ def fetch_xlsx_series(data, series_name):
         for row in best_rows:
             row["date"] = _to_month_end(row["date"])
 
+    history_years = cfg.get("history_years")
+    if history_years:
+        cutoff = f"{datetime.now(timezone.utc).year - history_years:04d}-01-01"
+        before = len(best_rows)
+        best_rows = [row for row in best_rows if row["date"] >= cutoff]
+        skipped = before - len(best_rows)
+        if skipped:
+            log(f"  {skipped} filas anteriores a {cutoff} descartadas "
+                f"(history_years={history_years}).")
+
     log(f"  Hoja usada: {best_sheet}. Filas de datos detectadas: {len(best_rows)}. "
-        f"Última fila: {best_rows[-1]}")
+        f"Última fila: {best_rows[-1] if best_rows else None}")
 
     series = data[series_name]
+    trimmed = False
+    if history_years:
+        # También se recorta el historial ya guardado, para que series que
+        # venían de una carga anterior más profunda (p. ej. reservas desde
+        # 2002) se acorten en el propio data.json y no solo en las filas
+        # nuevas que se agreguen de acá en adelante.
+        cutoff = f"{datetime.now(timezone.utc).year - history_years:04d}-01-01"
+        before = len(series)
+        series[:] = [r for r in series if r["date"] >= cutoff]
+        if len(series) != before:
+            trimmed = True
+            log(f"  {before - len(series)} filas antiguas recortadas del "
+                f"historial ya guardado de {series_name} (anteriores a {cutoff}).")
+
+    if not best_rows:
+        return trimmed
+
     by_date = {r["date"]: r for r in series}
     max_rel = cfg["max_relative_change"]
-    any_change = False
+    any_change = trimmed
     key = "value" if series_name == "itcr" else "neta" if series_name == "reservas" else None
 
     for row in best_rows:
@@ -528,6 +560,195 @@ def fetch_xlsx_series(data, series_name):
             by_date[row["date"]] = row
 
     return any_change
+
+
+# ---------------------------------------------------------------------------
+# Reservas internacionales - boletín "Información Estadística Semanal" del
+# BCB (Semanal_NN_AAAA.xlsx), que es MÁS RECIENTE que el Excel mensual de
+# componentes de arriba.
+#
+# Hallazgo (inspeccionando un archivo real subido por el usuario): en la
+# hoja "Estadística Semanal" cada COLUMNA es una fecha (al revés que el
+# Excel mensual, donde cada fila es una fecha) y cada indicador es una fila
+# fija. Para el mes en curso (todavía sin cerrar en el Excel mensual), las
+# columnas más nuevas vienen en dos formas:
+#   - "Semana N" en la fila de encabezado, con la fecha real (el viernes de
+#     cierre de esa semana) una fila más abajo.
+#   - columnas sueltas sin etiqueta "Semana", solo con la fecha (un día
+#     hábil) una fila más abajo - son los días ya transcurridos desde el
+#     cierre de la última semana completa, hasta la fecha de corte del
+#     propio boletín.
+# Esto es lo que da granularidad semanal/diaria real (no inventada) para el
+# mes en curso, mientras que el Excel mensual de componentes solo tiene el
+# dato una vez que el mes cierra.
+# ---------------------------------------------------------------------------
+
+WEEKLY_BULLETIN_LIST_URL = "https://www.bcb.gob.bo/?q=estad-sticas-semanales"
+
+# Etiquetas de fila propias de ESTE boletín (distintas a las del Excel
+# mensual de componentes) - hay que ser específico para no engancharse con
+# filas de oro en toneladas o de pasivos que también contienen "oro".
+RESERVAS_SEMANAL_COLUMNS = {
+    "oro": ["i. oro"],
+    "divisas": ["ii. divisas"],
+    "deg": ["iii. deg"],
+    "fmi": ["iv. posición con el fmi", "iv. posicion con el fmi"],
+    "neta": ["v. reservas internacionales netas"],
+    "netas_obligaciones": ["incluyendo obligaciones relativas al oro"],
+}
+
+
+def _discover_weekly_bulletin_url():
+    """Encuentra el link de descarga del boletín semanal más reciente
+    leyendo la página de listado, en vez de adivinar el nombre de archivo
+    (el número de semana no es un cálculo simple y hay archivos con
+    correcciones tipo 'Semanal 34_2026_0.xlsx' o espacios extra en el
+    nombre) - así el fetcher no se rompe si cambia la numeración. Se ordenan
+    todos los links encontrados por (año, semana) y se toma el mayor, en vez
+    de asumir que la página los lista del más nuevo al más viejo."""
+    from urllib.parse import unquote
+
+    r = requests.get(WEEKLY_BULLETIN_LIST_URL, headers=HEADERS, timeout=TIMEOUT)
+    r.raise_for_status()
+    matches = re.findall(r'href="([^"]*Semanal[^"]*\.xlsx)"', r.text, re.IGNORECASE)
+    if not matches:
+        return None
+
+    def sort_key(url):
+        m = re.search(r"semanal\s*(\d+)\s*_\s*(\d{4})", unquote(url), re.IGNORECASE)
+        return (int(m.group(2)), int(m.group(1))) if m else (0, 0)
+
+    matches.sort(key=sort_key, reverse=True)
+    url = matches[0]
+    if url.startswith("http"):
+        return url
+    if url.startswith("/"):
+        return "https://www.bcb.gob.bo" + url
+    return "https://www.bcb.gob.bo/" + url
+
+
+def _extract_weekly_bulletin(sheet, column_map):
+    """Extrae del boletín semanal solo las columnas del MES EN CURSO
+    ('Semana N' o días sueltos) - la historia mensual profunda de este mismo
+    archivo se ignora a propósito porque ya la cubre fetch_xlsx_series con
+    el Excel mensual de componentes, que es la fuente de referencia."""
+    rows_all = list(sheet.iter_rows(values_only=True))
+    if not rows_all:
+        return []
+    max_cols = max((len(r) for r in rows_all), default=0)
+
+    header_row_idx, header_hits = None, 0
+    for i in range(min(8, len(rows_all))):
+        row = rows_all[i]
+        hits = sum(
+            1 for v in row
+            if _coerce_date(v) is not None
+            or (isinstance(v, str) and v.strip().lower().startswith("semana"))
+        )
+        if hits > header_hits:
+            header_row_idx, header_hits = i, hits
+    if header_row_idx is None or header_hits < 3:
+        return []
+
+    header_row = rows_all[header_row_idx]
+    sub_row = rows_all[header_row_idx + 1] if header_row_idx + 1 < len(rows_all) else []
+
+    # Solo se quedan las columnas cuya fecha real está en sub_row (Semana N
+    # o día suelto) - las que ya son fecha directa en header_row son mes
+    # cerrado/historia, y se descartan acá a propósito.
+    col_dates = {}
+    for c in range(max_cols):
+        header_v = header_row[c] if c < len(header_row) else None
+        if _coerce_date(header_v) is not None:
+            continue
+        sub_v = sub_row[c] if c < len(sub_row) else None
+        sub_date = _coerce_date(sub_v)
+        if sub_date is not None:
+            col_dates[c] = sub_date
+
+    if not col_dates:
+        return []
+
+    label_col = 3
+    field_rows = {}
+    for r, row in enumerate(rows_all):
+        label = row[label_col] if label_col < len(row) else None
+        if not isinstance(label, str):
+            continue
+        label_norm = label.strip().lower()
+        for field, keywords in column_map.items():
+            if field in field_rows:
+                continue
+            if any(kw in label_norm for kw in keywords):
+                field_rows[field] = r
+
+    if not field_rows:
+        return []
+
+    results = []
+    for c, date_str in col_dates.items():
+        entry = {"date": date_str}
+        for field, r in field_rows.items():
+            row = rows_all[r]
+            v = row[c] if c < len(row) else None
+            if isinstance(v, (int, float)):
+                entry[field] = float(v)
+        if len(entry) > 1:
+            results.append(entry)
+
+    results.sort(key=lambda r: r["date"])
+    return results
+
+
+def fetch_reservas_semanal(data):
+    from openpyxl import load_workbook
+    import io
+
+    url = _discover_weekly_bulletin_url()
+    if not url:
+        log("  ADVERTENCIA: no se encontró el link del boletín semanal del BCB "
+            "en la página de listado. Revisar si cambió la estructura de "
+            "https://www.bcb.gob.bo/?q=estad-sticas-semanales")
+        return False
+
+    log(f"reservas (boletín semanal BCB): descargando {url} ...")
+    r = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+    r.raise_for_status()
+    wb = load_workbook(io.BytesIO(r.content), data_only=True)
+    rows = _extract_weekly_bulletin(wb.worksheets[0], RESERVAS_SEMANAL_COLUMNS)
+
+    if not rows:
+        log("  ADVERTENCIA: no se pudo interpretar la estructura del boletín "
+            "semanal del BCB (revisar manualmente el archivo).")
+        return False
+
+    log(f"  Filas del mes en curso detectadas: {len(rows)}. Última fila: {rows[-1]}")
+
+    series = data["reservas"]
+    by_date = {r["date"]: r for r in series}
+    any_change = False
+    for row in rows:
+        if by_date.get(row["date"]) == row:
+            continue
+        prev_val = _nearest_prior_value(series, row["date"], "neta")
+        if "neta" in row and prev_val is not None and not sanity_ok(prev_val, row["neta"], 0.20):
+            log(f"  ADVERTENCIA: reservas (semanal) {row['date']} valor {row['neta']} "
+                f"difiere demasiado del valor anterior más cercano ({prev_val}) - fila omitida.")
+            continue
+        if upsert(series, row):
+            any_change = True
+            by_date[row["date"]] = row
+
+    return any_change
+
+
+def fetch_reservas(data):
+    """Combina las dos fuentes de reservas: el Excel mensual de componentes
+    (historia profunda, cierra cada mes) y el boletín semanal (granularidad
+    semanal/diaria del mes en curso, que el mensual todavía no tiene)."""
+    changed_monthly = fetch_xlsx_series(data, "reservas")
+    changed_semanal = fetch_reservas_semanal(data)
+    return changed_monthly or changed_semanal
 
 
 def _to_month_end(date_str):
@@ -728,7 +949,7 @@ def main():
         ("tco", "TCO oficial", fetch_tco),
         ("banks", "Tasas bancarias", fetch_bank_rates),
         ("usdt", "USDT/BOB", fetch_usdt_bob),
-        ("reservas", "Reservas internacionales", lambda d: fetch_xlsx_series(d, "reservas")),
+        ("reservas", "Reservas internacionales", fetch_reservas),
         ("balanza", "Balanza cambiaria", lambda d: fetch_xlsx_series(d, "balanza")),
         ("itcr", "ITCR", lambda d: fetch_xlsx_series(d, "itcr")),
     ]
