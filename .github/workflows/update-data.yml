@@ -8,10 +8,19 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   update:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Descargar el repositorio
         uses: actions/checkout@v4
@@ -46,3 +55,21 @@ jobs:
               sleep 5
             done
           fi
+
+      # A partir de acá: publicar el sitio en GitHub Pages con el estado
+      # actual del repositorio. Hace falta este paso explícito porque un
+      # commit hecho con el token automático de GitHub Actions (el de
+      # arriba) NO dispara la reconstrucción automática de Pages - por eso
+      # el sitio se quedaba mostrando datos viejos aunque el repositorio ya
+      # tuviera los nuevos.
+      - name: Preparar sitio para GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Empaquetar sitio
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Publicar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
