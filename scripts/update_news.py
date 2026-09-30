@@ -1,32 +1,54 @@
 #!/usr/bin/env python3
 """
-Genera noticias.json a partir del RSS general de portada de El Deber,
-filtrando por palabras clave relacionadas a tipo de cambio, reservas,
-préstamos internacionales, subsidios, etc.
+Genera noticias.json a partir del RSS de búsqueda de Google News, filtrado a
+noticias bolivianas relacionadas a tipo de cambio, reservas, FMI, subsidios,
+etc.
 
-Usamos el feed de portada (/rss/home.xml) en vez del feed específico de
-Economía (/rss/economia.xml): la sección Economía del sitio suele estar
-detrás de un paywall más agresivo para accesos automatizados, lo que hacía
-que noticias.json se quedara desactualizado por varios días aunque el sitio
-sí publicaba noticias económicas nuevas. El feed de portada trae ~100 notas
-de todas las secciones (no solo Economía) y el mismo filtro de palabras
-clave de abajo elige, de ahí, las relacionadas a tipo de cambio/BCB/FMI/etc.
+Antes usábamos el RSS de El Deber directamente (primero /rss/economia.xml,
+luego /rss/home.xml), pero los logs de GitHub Actions mostraron un 403
+Forbidden contra CUALQUIER ruta de eldeber.com.bo, siempre, sin importar el
+User-Agent: es un bloqueo de red/IP contra los runners de GitHub Actions, no
+un tema de paywall de la sección Economía. Google News agrega muchos medios
+a la vez y es mucho más difícil que bloquee IPs de nubes como la de GitHub
+Actions.
 
-No usa ningún modelo de lenguaje: el "resumen" de cada nota es la propia
-descripción (bajada) que El Deber publica en su feed RSS, pensada por el
-sitio para mostrarse en previsualizaciones - no es un resumen original.
-Siempre se enlaza directamente a la nota completa en eldeber.com.bo.
+Trade-offs conocidos de este enfoque (aceptados explícitamente):
+  - Los links son redirecciones de Google (news.google.com/rss/articles/...),
+    no la URL directa del medio. Al abrirlos, el navegador sí termina en la
+    nota original.
+  - Google News no entrega imagen de portada (no hay <enclosure> en su feed),
+    así que las noticias se muestran sin miniatura.
+  - La <description> de Google News es HTML de previsualización (el mismo
+    título envuelto en un <a>, más el nombre del medio) y NO es un resumen
+    real de la nota - por eso acá NO se usa como "bajada": se deja vacía en
+    vez de inventar un resumen falso.
+
+No usa ningún modelo de lenguaje: solo arma la búsqueda con las palabras
+clave de abajo y deja que Google News decida qué notas coinciden.
 """
 
 import json
 import re
 import sys
 from datetime import datetime, timezone
+from urllib.parse import quote
 from xml.etree import ElementTree
 
 import requests
 
-RSS_URL = "https://eldeber.com.bo/rss/home.xml"
+# Búsqueda de Google News: términos de tipo de cambio / BCB / reservas / FMI /
+# subvenciones acotada a Bolivia. "OR" y comillas son operadores de búsqueda
+# de Google, igual que en news.google.com.
+SEARCH_QUERY = (
+    '("tipo de cambio" OR dolar OR dólar OR BCB OR "banco central" OR '
+    'reservas OR FMI OR "banco mundial" OR "deuda externa" OR subvencion OR '
+    'subvención OR subsidio OR divisas OR USDT OR cambiario OR devaluacion OR '
+    'devaluación) Bolivia'
+)
+RSS_URL = (
+    "https://news.google.com/rss/search?q=" + quote(SEARCH_QUERY) +
+    "&hl=es-419&gl=BO&ceid=BO:es-419"
+)
 OUT_PATH = "noticias.json"
 MAX_ITEMS = 5
 
@@ -35,9 +57,10 @@ HEADERS = {
                   "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
     "Accept": "application/rss+xml, application/xml, text/xml, */*;q=0.9",
     "Accept-Language": "es-BO,es;q=0.9,en;q=0.8",
-    "Referer": "https://eldeber.com.bo/",
 }
 
+# Filtro adicional sobre el título (Google ya filtró por SEARCH_QUERY, pero
+# esto evita ruido de resultados solo tangencialmente relacionados).
 KEYWORDS = [
     "dolar", "dólar", "tipo de cambio", "tco", "devaluacion", "devaluación",
     "apreciacion", "depreciacion", "reserva", "bcb", "banco central",
@@ -67,8 +90,8 @@ def normalize(s):
     return s
 
 
-def matches_keywords(title, summary):
-    text = normalize(title + " " + summary)
+def matches_keywords(title):
+    text = normalize(title)
     return any(normalize(kw) in text for kw in KEYWORDS)
 
 
@@ -83,17 +106,28 @@ def parse_pubdate(s):
     return None
 
 
+def clean_title(title_raw, source_name):
+    """Google News pone el título como 'Titular - Medio'; se quita el sufijo
+    del medio si coincide, para no repetirlo (ya se muestra aparte)."""
+    title = re.sub(r"\s+", " ", title_raw).strip()
+    if source_name:
+        suffix = " - " + source_name
+        if title.endswith(suffix):
+            title = title[: -len(suffix)].strip()
+    return title
+
+
 def main():
-    log(f"Descargando RSS: {RSS_URL}")
+    log(f"Descargando RSS de Google News: {RSS_URL}")
     try:
         r = requests.get(RSS_URL, headers=HEADERS, timeout=25)
         r.raise_for_status()
         root = ElementTree.fromstring(r.content)
     except Exception as e:
-        # Un fallo acá (403 del sitio, timeout, XML roto, etc.) nunca debe
-        # tumbar el resto del pipeline: se deja noticias.json sin tocar y
-        # se sale con código 0 para que el workflow siga hasta el commit
-        # de los datos numéricos, que sí se actualizaron en el paso anterior.
+        # Un fallo acá (bloqueo, timeout, XML roto, etc.) nunca debe tumbar
+        # el resto del pipeline: se deja noticias.json sin tocar y se sale
+        # con código 0 para que el workflow siga hasta el commit de los
+        # datos numéricos, que sí se actualizaron en el paso anterior.
         log(f"ADVERTENCIA: no se pudo obtener/leer el RSS ({e}). "
             "Se deja noticias.json sin cambios.")
         return 0
@@ -104,25 +138,42 @@ def main():
         return 0
 
     candidates = []
+    seen_titles = set()
     for item in channel.findall("item"):
-        title = strip_cdata(item.findtext("title"))
-        description = strip_cdata(item.findtext("description"))
+        title_raw = strip_cdata(item.findtext("title"))
         link = strip_cdata(item.findtext("link"))
         pub_date_raw = strip_cdata(item.findtext("pubDate"))
         pub_date = parse_pubdate(pub_date_raw)
 
-        enclosure = item.find("enclosure")
-        image = enclosure.get("url") if enclosure is not None else None
+        source_el = item.find("source")
+        source_name = strip_cdata(source_el.text) if source_el is not None else None
 
-        if not title or not link:
+        # Algunos items de Google News sí traen imagen vía <media:content>
+        # (namespace MRSS); si no está, se deja sin miniatura como antes.
+        media_el = item.find("{http://search.yahoo.com/mrss/}content")
+        image = media_el.get("url") if media_el is not None else None
+
+        if not title_raw or not link:
             continue
-        if not matches_keywords(title, description):
+
+        title = clean_title(title_raw, source_name)
+        if not matches_keywords(title):
             continue
+
+        # Google suele repetir la misma noticia vía varios agregadores/medios
+        # - se descarta el duplicado exacto de título para no mostrar la
+        # misma nota dos veces en los 5 espacios disponibles.
+        dedup_key = normalize(title)
+        if dedup_key in seen_titles:
+            continue
+        seen_titles.add(dedup_key)
 
         candidates.append({
-            "title": re.sub(r"\s+", " ", title).strip(),
-            "summary": re.sub(r"\s+", " ", description).strip(),
-            "source": "El Deber",
+            "title": title,
+            # Sin resumen real disponible en el feed de Google News (ver
+            # docstring) - se deja vacío en vez de inventar uno.
+            "summary": "",
+            "source": source_name or "Google News",
             "url": link,
             "image": image,
             "_pub_date": pub_date or datetime.min,
