@@ -970,7 +970,7 @@
       var s = DATA.banks[n] || [];
       var last = s.length ? s[s.length-1] : null;
       if(last && last.date === lastDate && last.rate != null){
-        today.push({name:n.replace('Banco ',''), rate:last.rate});
+        today.push({name:bankLabel(n), rate:last.rate});
       }
     });
     if(today.length < 2) return;
@@ -1116,6 +1116,14 @@
     'Banco de Credito': '#F7941D',
     'Banco de la Nacion Argentina': '#75AADB',
   };
+  // Algunos nombres del dataset se muestran con una etiqueta comercial distinta.
+  var BANK_LABELS = {
+    'Banco de Credito': 'BCP',
+    'Banco Mercantil Santa Cruz': 'Mercantil BMSC',
+    'Banco Nacional de Bolivia': 'Nacional - BNB',
+    'Banco Solidario': 'SOL',
+  };
+  function bankLabel(name){ return BANK_LABELS[name] || name.replace('Banco ',''); }
   var SISTEMA_KEY = '__SISTEMA__', SISTEMA_LABEL = 'Sistema financiero';
   var bankChart, selectedBank = SISTEMA_KEY;
   function getBankSeries(key){
@@ -1137,7 +1145,7 @@
       var s = DATA.banks[n] || [];
       var last = s.length ? s[s.length-1] : null;
       if(last && last.date === lastDate && last.rate != null){
-        today.push({name:n.replace('Banco ',''), rate:last.rate});
+        today.push({name:bankLabel(n), rate:last.rate});
       }
     });
     var stats = [];
@@ -1162,11 +1170,23 @@
     applyStagger(el, 70);
   }
 
+  // Orden de despliegue de los botones de banco: igual al del dataset, salvo
+  // por pares cuyo color quedaría muy parecido si se muestran uno al lado
+  // del otro (Mercantil BMSC / PyME Ecofuturo).
+  var BANK_DISPLAY_SWAPS = [['Banco Mercantil Santa Cruz', 'Banco PyME Ecofuturo']];
+  function displayBankOrder(names){
+    var ordered = names.slice();
+    BANK_DISPLAY_SWAPS.forEach(function(pair){
+      var i = ordered.indexOf(pair[0]), j = ordered.indexOf(pair[1]);
+      if(i > -1 && j > -1){ var tmp = ordered[i]; ordered[i] = ordered[j]; ordered[j] = tmp; }
+    });
+    return ordered;
+  }
   function renderBankSection(){
     var btnRow = document.getElementById('bankButtons');
-    var names = DATA.bank_names;
+    var names = displayBankOrder(DATA.bank_names);
     var opts = [{key:SISTEMA_KEY, label:SISTEMA_LABEL, sistema:true}].concat(names.map(function(n){
-      return {key:n, label:n.replace('Banco ','')};
+      return {key:n, label:bankLabel(n)};
     }));
     btnRow.innerHTML = opts.map(function(o){
       var cls = 'pill'+(o.sistema?' pill-sistema':' pill-bank')+(o.key===selectedBank?' active':'');
@@ -1187,7 +1207,7 @@
     var avgSeries = DATA.aggregates['Bancos (promedio ponderado)'] || [];
     var avgByDate = {}; avgSeries.forEach(function(d){ avgByDate[d.date]=d.rate; });
     var bankSeries = getBankSeries(selectedBank);
-    var label = isSistema ? SISTEMA_LABEL+' (promedio ponderado)' : selectedBank;
+    var label = isSistema ? SISTEMA_LABEL+' (promedio ponderado)' : bankLabel(selectedBank);
     var rows, series;
     if(isSistema){
       rows = bankSeries.map(function(d){ return {date:d.date, rate:d.rate}; });
