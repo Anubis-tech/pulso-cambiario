@@ -1,0 +1,41 @@
+name: Publicar sitio al subir cambios
+
+# Publica el sitio en GitHub Pages cada vez que se sube un cambio manual a main
+# (páginas HTML, sitemap, etc.). Sin esto, el sitio solo se publicaba cuando
+# corría alguno de los workflows de datos.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Mismo grupo que los workflows de datos: nunca hay dos publicaciones a la vez.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar sitio para GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Empaquetar sitio
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Publicar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
