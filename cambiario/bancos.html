@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Compra de dólares por banco en Bolivia: monto y precio | Pulso Cambiario</title>
+<meta name="description" content="Cuántos dólares compra cada banco en Bolivia y a qué precio promedio ponderado, frente al sistema financiero. Datos del BCB, actualización automática.">
+<link rel="canonical" href="https://elpulsoeconomico.com/cambiario/bancos.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<style>
+  :root{
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f7f7f5;
+    --hero-bg: #0a0a0a;
+    --hero-ink: #ffffff;
+    --ink: #0a0a0a;
+    --ink-2: #3d3d3a;
+    --muted: #767570;
+    --grid: #e7e6e1;
+    --border: rgba(10,10,10,0.14);
+    --rule: #0a0a0a;
+    --accent: #2a78d6;
+    --accent-ink: #184f95;
+    --series-avg: #8b95a3;
+    --good: #006300;
+    --bad: #b3261e;
+    --ingreso: #1baf7a;
+    --font-display: "Archivo", "IBM Plex Sans", system-ui, sans-serif;
+    --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg: #0d0f12;
+      --surface: #16191e;
+      --surface-2: #101318;
+      --hero-bg: #000000;
+      --hero-ink: #ffffff;
+      --ink: #f3f4f6;
+      --ink-2: #c3c8d1;
+      --muted: #8b93a1;
+      --grid: #262a31;
+      --border: rgba(255,255,255,0.14);
+      --rule: #f3f4f6;
+      --accent: #3987e5;
+      --accent-ink: #86b6ef;
+      --series-avg: #6b7280;
+      --good: #0ca30c;
+      --bad: #e66767;
+      --ingreso: #199e70;
+    }
+    :root:not([data-theme="light"]) .pill-bank:not(.active){ color: var(--ink-2); }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg: #0d0f12;
+    --surface: #16191e;
+    --surface-2: #101318;
+    --hero-bg: #000000;
+    --hero-ink: #ffffff;
+    --ink: #f3f4f6;
+    --ink-2: #c3c8d1;
+    --muted: #8b93a1;
+    --grid: #262a31;
+    --border: rgba(255,255,255,0.14);
+    --rule: #f3f4f6;
+    --accent: #3987e5;
+    --accent-ink: #86b6ef;
+    --series-avg: #6b7280;
+    --good: #0ca30c;
+    --bad: #e66767;
+    --ingreso: #199e70;
+  }
+  :root[data-theme="dark"] .pill-bank:not(.active){ color: var(--ink-2); }
+
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); -webkit-text-size-adjust:100%; }
+  body{
+    margin:0; background: var(--bg); color: var(--ink); font-family: var(--font-ui);
+    font-variant-numeric: tabular-nums;
+  }
+  button{ font:inherit; color:inherit; }
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  /* ---------- Portada ---------- */
+  .hero{
+    background: var(--hero-bg); color: var(--hero-ink);
+    padding: 22px 16px 24px;
+    padding-block: max(22px, env(safe-area-inset-top, 0px)) 24px;
+  }
+  /* ---------- Navegación común del sitio (igual en todas las páginas) ---------- */
+  .site-nav{ background:var(--bg); border-bottom:1px solid var(--border); padding:0 16px; padding-top:env(safe-area-inset-top, 0px); }
+  .site-nav-inner{ max-width:980px; margin:0 auto; display:flex; align-items:center; gap:6px 22px; flex-wrap:wrap; min-height:46px; padding:6px 0; }
+  .site-brand{ font-family:var(--font-display); font-weight:800; font-size:16px; letter-spacing:-.01em; color:var(--ink); text-decoration:none; margin-right:auto; }
+  .site-group{ display:flex; align-items:center; gap:4px 14px; flex-wrap:wrap; }
+  .site-group-label{ font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .site-nav a.nav-item{ font-family:var(--font-mono); font-size:11.5px; font-weight:500; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-2); text-decoration:none; padding:5px 0; border-bottom:2px solid transparent; }
+  .site-nav a.nav-item:hover{ color:var(--ink); border-bottom-color:var(--border); }
+  .site-nav a.nav-item[aria-current="page"]{ color:var(--ink); font-weight:600; border-bottom-color:var(--accent); }
+  .hero-inner{ max-width: 980px; margin: 0 auto; }
+  .hero-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family: var(--font-mono); font-size:11px; font-weight:500; letter-spacing:.08em; text-transform:uppercase;
+    color: rgba(255,255,255,0.62);
+  }
+  .eyebrow .dot{ width:7px; height:7px; border-radius:50%; background:#e3a900; flex:none; animation: pulse-dot 2.4s ease-in-out infinite; }
+  @keyframes pulse-dot{ 0%,100%{ box-shadow:0 0 0 0 rgba(227,169,0,0.35);} 50%{ box-shadow:0 0 0 5px rgba(227,169,0,0);} }
+  .back-foot{ font-family:var(--font-mono); font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent-ink); }
+  .asof{ font-family:var(--font-mono); font-size:11.5px; color:rgba(255,255,255,0.62); text-align:right; }
+  h1.title{
+    font-family: var(--font-display); font-weight:800; letter-spacing:-.01em;
+    font-size: clamp(32px,6.4vw,50px); line-height:0.98; margin: 14px 0 8px; text-wrap: balance;
+  }
+  .hero .subtitle{ font-family:var(--font-display); font-weight:700; font-size:clamp(18px,3.4vw,26px); letter-spacing:-.005em; line-height:1.15; color:rgba(255,255,255,0.9); margin:0 0 12px; }
+  .hero-bar{ width:56px; height:4px; background:var(--accent); margin-bottom:12px; }
+  .hero p.dek{ margin:0; color:rgba(255,255,255,0.72); font-size:15px; max-width:62ch; line-height:1.5; }
+
+  /* ---------- Filtros ---------- */
+  /* Barra de filtros: debajo de las cifras principales y fija al bajar, para ver cómo cambian los gráficos */
+  .filters{
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+    background: var(--bg); border-bottom: 2px solid var(--rule);
+    margin-top: -28px;   /* cancela el espacio entre bloques: los botones quedan pegados a la línea de separación */
+  }
+  .filters-inner{ padding: 8px 0 8px; display:flex; flex-direction:column; gap:6px; }
+  .frow{ display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap; }
+  .flabel{
+    font-family:var(--font-mono); font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;
+    width:58px; flex:none; padding-top:6px;
+  }
+  .frow .grow{ flex:1 1 400px; min-width:0; }
+  .fmeta{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-top:5px; font-family:var(--font-mono); font-size:11px; color:var(--muted); }
+  .linkbtn{ border:0; background:none; padding:0; cursor:pointer; font-family:var(--font-mono); font-size:11px; color:var(--accent-ink); text-decoration:underline; text-underline-offset:2px; }
+  .fgroup{ display:flex; align-items:center; gap:8px; }
+  .fgroup input[type=date]{ border:1px solid var(--rule); background:var(--surface); color:var(--ink); padding:5px 8px; font:inherit; font-size:12px; }
+
+  .controls{ display:flex; flex-wrap:wrap; gap:0; }
+  .pill{
+    font-family:var(--font-mono); font-size:11.5px; font-weight:500; color:var(--ink-2);
+    background:var(--surface); border:1px solid var(--rule); border-radius:0;
+    padding:5px 12px; cursor:pointer; transition:background .1s,color .1s;
+    white-space:nowrap; text-transform:uppercase; letter-spacing:.03em;
+    margin-left:-1px;
+  }
+  .pill:hover{ background: var(--surface-2); }
+  .pill.active{ background:var(--rule); border-color:var(--rule); color:var(--bg); }
+  .pill:disabled{ opacity:.38; cursor:not-allowed; }
+  .pill:disabled:hover{ background:var(--surface); }
+  .bank-row{ display:flex; flex-wrap:wrap; gap:6px; }
+  .bank-row .pill{ margin-left:0; padding:4px 10px; }
+  .pill-sistema{ font-weight:700; border-color:var(--ingreso); margin-right:9px; }
+  .pill-sistema:hover{ background: var(--surface-2); }
+  .pill-sistema.active{ background:var(--ingreso); border-color:var(--ingreso); color:#fff; }
+  .pill-bank{ color:var(--b, var(--ink-2)); border-color:var(--b, var(--rule)); font-weight:600; }
+  .pill-bank.active{ background:var(--b, var(--ink)); border-color:var(--b, var(--ink)); color:var(--on, #fff); }
+
+  /* ---------- Cuerpo ---------- */
+  .wrap{ max-width: 980px; margin: 0 auto; display:flex; flex-direction:column; gap:28px; padding: 26px 16px 48px; }
+  section{ display:flex; flex-direction:column; gap:12px; }
+
+  .spotlight{ padding:0 0 16px; border-bottom:1px solid var(--border); }
+  .spotlight-headline{ margin:0 0 18px; font-family:var(--font-ui); font-size:16.5px; font-weight:600; line-height:1.45; color:var(--ink); max-width:70ch; }
+  .spotlight-grid{ display:flex; flex-wrap:wrap; gap:26px 44px; }
+  .spotlight-figure{ flex:1 1 240px; min-width:220px; }
+  .s-label{ font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:6px; }
+  .s-row{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .s-value{ font-family:var(--font-display); font-weight:800; font-size:clamp(32px,4.6vw,48px); line-height:0.95; letter-spacing:-0.01em; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .s-unit{ font-family:var(--font-mono); font-size:12px; font-weight:500; letter-spacing:.02em; color:var(--muted); margin-left:7px; }
+  .s-chip{ font-family:var(--font-mono); font-size:13px; font-weight:700; white-space:nowrap; }
+  .s-chip.up{ color:var(--bad); }
+  .s-chip.down{ color:var(--good); }
+  .s-context{ margin-top:8px; font-size:13px; color:var(--ink-2); }
+  .hl-row{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .hl-row + .hl-row{ margin-top:6px; }
+  .hl-v{ font-family:var(--font-display); font-weight:800; font-size:clamp(26px,3.6vw,36px); line-height:1; letter-spacing:-0.01em; }
+  .hl-v.bad{ color:var(--bad); } .hl-v.good{ color:var(--good); }
+  .hl-b{ font-family:var(--font-display); font-weight:700; font-size:15px; }
+  .hl-k{ font-family:var(--font-mono); font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  .hl-note{ font-size:13px; color:var(--muted); padding-top:4px; }
+
+  .accent-draw{ display:inline-block; width:22px; height:3px; background:var(--ingreso); transform-origin:left center; transform:scaleX(0); transition:transform .5s cubic-bezier(.2,.7,.3,1) .08s; margin-right:9px; vertical-align:middle; flex:none; }
+  .reveal.in-view .accent-draw, .reveal-top.in-view .accent-draw{ transform:scaleX(1); }
+  .section-band .accent-draw{ background:#fff; }
+
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .6s cubic-bezier(.2,.7,.3,1), transform .6s cubic-bezier(.2,.7,.3,1); }
+  .reveal.in-view{ opacity:1; transform:none; }
+  .reveal-top{ opacity:0; transform:translateY(-10px); transition:opacity .6s ease, transform .6s ease; }
+  .reveal-top.in-view{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion: reduce){
+    .reveal, .reveal-top, .accent-draw{ transition:none !important; opacity:1 !important; transform:none !important; }
+    .eyebrow .dot{ animation:none; }
+  }
+
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; border-bottom: 2px solid var(--rule); padding-bottom:8px; }
+  .section-head h2{ font-family: var(--font-display); font-size:19px; font-weight:700; margin:0; letter-spacing:-.005em; }
+  .hint{ font-family: var(--font-mono); font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+  .sec-title{ display:flex; align-items:baseline; gap:9px; }
+  .sec-num{ font-family:var(--font-mono); font-size:12px; font-weight:600; color:var(--muted); }
+  .section-band{
+    background:var(--hero-bg); color:var(--hero-ink);
+    display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; padding:14px 16px;
+  }
+  .section-band .sec-num{ color:rgba(255,255,255,0.5); }
+  .section-band h2{ font-family: var(--font-display); font-size:19px; font-weight:700; margin:0; letter-spacing:-.005em; color:var(--hero-ink); }
+  .section-band .hint{ color:rgba(255,255,255,0.55); }
+
+  .card{ background: var(--surface); border:1px solid var(--border); border-radius:0; padding:18px 16px; }
+  .context-note{ margin:0; font-size:13.5px; line-height:1.55; color:var(--ink-2); max-width:74ch; }
+  .context-note.in-card{ margin:0 0 14px; }
+  .footnote{ margin:10px 0 0; font-size:11.5px; color:var(--muted); line-height:1.5; }
+
+  .kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); border-top:1px solid var(--rule); border-left:1px solid var(--border); }
+  .kpi{ background:var(--surface); border-bottom:1px solid var(--border); border-right:1px solid var(--border); padding:14px 16px; display:flex; flex-direction:column; gap:6px; }
+  .kpi .label{ font-family:var(--font-mono); font-size:10.5px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.05em; }
+  .kpi .value{ font-family:var(--font-mono); font-size:21px; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+  .kpi .sub{ font-size:11px; color:var(--muted); }
+  .section-head + .kpis{ border-top:0; }
+
+  .chart-wrap{ position:relative; height:270px; }
+  .chart-wrap.tall{ height:420px; }
+  .legend{ display:flex; flex-wrap:wrap; gap:14px; font-size:12px; color:var(--ink-2); margin-top:10px; }
+  .legend .item{ display:flex; align-items:center; gap:6px; }
+  .legend .swatch{ width:10px; height:10px; border-radius:3px; flex:none; }
+  .legend .swatch.line{ height:2px; width:16px; border-radius:1px; }
+  .empty{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; text-align:center; color:var(--muted); font-size:12.5px; background:var(--surface); padding:0 16px; }
+  .empty.on{ display:flex; }
+
+  .tablewrap{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:12.5px; }
+  thead th{
+    text-align:right; font-weight:500; color:var(--muted); padding:0 10px 8px; border-bottom:1px solid var(--rule);
+    white-space:nowrap; vertical-align:bottom; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;
+  }
+  thead th:first-child{ text-align:left; padding-left:0; }
+  thead th button{ border:0; background:none; padding:0; cursor:pointer; color:inherit; font:inherit; text-transform:inherit; letter-spacing:inherit; white-space:nowrap; }
+  thead th button:hover{ color:var(--ink); }
+  thead th[aria-sort="ascending"] button::after{ content:" ▲"; font-size:8px; }
+  thead th[aria-sort="descending"] button::after{ content:" ▼"; font-size:8px; }
+  thead th[aria-sort] button{ color:var(--ink); }
+  tbody td, tfoot td{ padding:8px 10px; border-bottom:1px solid var(--grid); text-align:right; white-space:nowrap; }
+  tbody td:first-child, tfoot td:first-child{ text-align:left; padding-left:0; font-family:var(--font-ui); font-weight:600; font-size:13px; }
+  tbody tr:hover td{ background:var(--surface-2); }
+  tfoot td{ border-top:2px solid var(--rule); border-bottom:0; font-weight:600; }
+  td.muted{ color:var(--muted); }
+  .dim{ color:var(--muted); font-weight:400; }
+  .bsw{ display:inline-block; width:8px; height:8px; margin-right:8px; vertical-align:baseline; }
+  .mbar{ position:relative; display:inline-block; min-width:92px; text-align:right; }
+  .mbar i{ position:absolute; left:0; top:50%; height:14px; transform:translateY(-50%); background:var(--series-avg); opacity:.28; }
+  .mbar span{ position:relative; }
+  .prima{ display:inline-flex; align-items:center; gap:8px; justify-content:flex-end; }
+  .prima .track{ position:relative; width:96px; height:14px; }
+  .prima .track::before{ content:""; position:absolute; left:50%; top:0; bottom:0; width:1px; background:var(--series-avg); }
+  .prima .track i{ position:absolute; top:2px; height:10px; }
+  .prima .num{ min-width:48px; text-align:right; }
+  .good{ color:var(--good); } .bad{ color:var(--bad); }
+  i.g{ background:var(--good); } i.r{ background:var(--bad); }
+
+  footer{ margin-top:8px; padding-top:14px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px; }
+  footer p{ margin:0; font-size:11.5px; color:var(--muted); line-height:1.6; }
+  footer .sources{ font-weight:600; color:var(--ink-2); }
+  footer details{ margin-top:4px; }
+  footer summary{ cursor:pointer; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-2); }
+  footer ul{ margin:10px 0 0; padding-left:18px; max-width:78ch; }
+  footer li{ margin:0 0 6px; font-size:12px; color:var(--ink-2); line-height:1.55; }
+  .foot-pad{ padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+  @media (max-width:720px){
+    .filters{ position:static; }
+    .flabel{ width:100%; padding-top:0; }
+    .s-value{ font-size:34px; }
+  }
+  @media (max-width:520px){
+    .kpis{ grid-template-columns:repeat(2,1fr); }
+  }
+  @media print{ .filters{ position:static; } }
+
+  /* ---------- Color de la vertical ----------
+     Cada vertical del sitio tiene un color de acento; el banner sigue negro.
+     Pulso Cambiario = azul. Para otra vertical, cambiar solo --vertical. */
+  :root{ --vertical: var(--accent); }
+  .hero{ border-bottom:5px solid var(--vertical); }
+  .hero-bar, .accent-draw{ background:var(--vertical); }
+  .section-band .accent-draw{ background:#fff; }
+  .site-nav a.nav-item[aria-current="page"]{ border-bottom-color:var(--vertical); }
+</style>
+</head>
+<body>
+
+<nav class="site-nav" aria-label="Navegación del sitio">
+  <div class="site-nav-inner">
+    <a class="site-brand" href="../">Pulso Económico</a>
+    <div class="site-group">
+      <span class="site-group-label">Pulso Cambiario</span>
+      <a class="nav-item" href="../">Tipo de cambio</a>
+      <a class="nav-item" href="bancos.html" aria-current="page">Compras por banco</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero reveal-top">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div class="eyebrow"><span class="dot"></span>Mercado cambiario bancario</div>
+      <div class="asof" id="asof">—</div>
+    </div>
+    <div class="hero-bar"></div>
+    <h1 class="title">Pulso Cambiario:</h1>
+    <p class="subtitle">Compras Sistema Financiero</p>
+    <p class="dek">Monto comprado y precio promedio ponderado (PPP), banco por banco, frente al sistema financiero. Menor precio es mejor.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="spotlight reveal-top" id="spotlight">
+    <p class="spotlight-headline" id="spHead"></p>
+    <div class="spotlight-grid">
+      <div class="spotlight-figure">
+        <div class="s-label">Monto comprado</div>
+        <div class="s-row"><div class="s-value" id="spMonto">—</div></div>
+        <div class="s-context" id="spMontoCtx"></div>
+      </div>
+      <div class="spotlight-figure">
+        <div class="s-label">Precio promedio ponderado</div>
+        <div class="s-row"><div class="s-value" id="spPpp">—</div><div id="spPppChip"></div></div>
+        <div class="s-context" id="spPppCtx"></div>
+      </div>
+      <div class="spotlight-figure">
+        <div class="s-label"><span class="accent-draw"></span><span id="spHLLbl">PPP más alto y más bajo</span></div>
+        <div id="spHL"></div>
+        <div class="s-context" id="spHLCtx"></div>
+      </div>
+    </div>
+  </div>
+
+<div class="filters">
+  <div class="filters-inner">
+    <div class="frow">
+      <span class="flabel">Período</span>
+      <div class="controls" id="quick" role="group" aria-label="Período">
+        <button type="button" class="pill" data-range="sem" aria-pressed="false">Semana</button>
+        <button type="button" class="pill" data-range="15d" aria-pressed="false">15 días</button>
+        <button type="button" class="pill" data-range="30d" aria-pressed="false">1 mes</button>
+        <button type="button" class="pill" data-range="mes" aria-pressed="false">Mes en curso</button>
+        <button type="button" class="pill" data-range="ant" aria-pressed="false">Mes anterior</button>
+      </div>
+      <!-- Fechas: ocultas por ahora. La lógica sigue activa; quitar el atributo hidden para mostrarlas. -->
+      <div class="fgroup" hidden>
+        <label for="fFrom" class="hint">Desde</label><input type="date" id="fFrom">
+        <label for="fTo" class="hint">hasta</label><input type="date" id="fTo">
+      </div>
+      <!-- Agrupación: oculta por ahora (solo datos diarios). Quitar hidden para habilitar Semana y Mes. -->
+      <div class="controls" id="gran" role="group" aria-label="Agrupar por" hidden>
+        <button type="button" class="pill active" data-gran="dia" aria-pressed="true">Día</button>
+        <button type="button" class="pill" data-gran="semana" aria-pressed="false">Semana</button>
+        <button type="button" class="pill" data-gran="mes" aria-pressed="false">Mes</button>
+      </div>
+    </div>
+    <div class="frow">
+      <span class="flabel">Bancos</span>
+      <div class="grow">
+        <div class="bank-row" id="chips"></div>
+        <div class="fmeta"><button type="button" class="linkbtn" data-pick="top3">Los 3 mayores</button><span id="chipHint"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <section class="reveal">
+    <div class="section-head">
+      <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">01</span><h2>Precio promedio ponderado por día</h2></div>
+      <span class="hint" id="hintRange1"></span>
+    </div>
+    <p class="context-note">Bs por USD. La línea del sistema financiero siempre aparece. Cada banco que eliges suma su propia línea, hasta 3.</p>
+    <div class="card">
+      <div class="chart-wrap"><canvas id="cLine" role="img" aria-label="Precio promedio ponderado por día"></canvas><div class="empty" id="eLine"></div></div>
+      <div class="legend" id="legLine"></div>
+    </div>
+    <div class="kpis" id="kpiRow"></div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">02</span><h2>Monto comprado por día</h2></div>
+      <span class="hint">USD, todo el sistema</span>
+    </div>
+    <p class="context-note">Tienen color los bancos que elegiste y los 3 mayores del período. El resto va como Otros. Pasa el cursor para ver el detalle de todos.</p>
+    <div class="card">
+      <div class="chart-wrap"><canvas id="cBar" role="img" aria-label="Monto comprado por día, todo el sistema"></canvas><div class="empty" id="eBar"></div></div>
+      <div class="legend" id="legBar"></div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-band">
+      <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">03</span><h2>Volumen y precio frente al mercado</h2></div>
+      <span class="hint">Todos los bancos del período</span>
+    </div>
+    <div class="card">
+      <p class="context-note in-card">Más arriba es más caro que el mercado del mismo día (rojo); más abajo, más barato (verde). El tamaño es el número de transacciones.</p>
+      <div class="chart-wrap tall"><canvas id="cBub" role="img" aria-label="Monto comprado contra prima sobre el mercado por banco"></canvas><div class="empty" id="eBub"></div></div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">04</span><h2>Detalle por banco</h2></div>
+      <span class="hint">Verde es favorable: compró más barato que el mercado</span>
+    </div>
+    <div class="card">
+      <div class="tablewrap"><table id="tbl"></table></div>
+    </div>
+  </section>
+
+  <footer>
+    <p class="sources">Fuente: Banco Central de Bolivia (BCB), tipo de cambio, montos y transacciones por banco. Cálculos propios. Actualización automática.</p>
+    <p>MM = millones de USD. † = banco PyME o de poca relevancia, o con muestra delgada en el período.</p>
+    <details>
+      <summary>Cómo se calcula y qué tener en cuenta</summary>
+      <ul>
+        <li><b>PPP</b> = Σ(precio × monto) ÷ Σ monto. El promedio simple trata igual un día de USD 1 que uno de USD 26 MM.</li>
+        <li><b>Prima vs mercado</b> = PPP del banco − PPP de todos los bancos el mismo día, ponderada por el monto del banco. Negativo es favorable. Sirve para comparar bancos sin que pese en qué días operó cada uno, porque el precio subió durante el año.</li>
+        <li><b>Sistema financiero</b> es la vista por defecto. Sin bancos elegidos, los indicadores muestran el total de los 14 bancos. En esa vista, el PPP más alto y el más bajo excluyen los bancos con muestra delgada; si eliges bancos, se comparan los que elegiste.</li>
+        <li><b>Períodos:</b> se calculan desde el último dato disponible, no desde la fecha de hoy. Semana = últimos 7 días corridos; 1 mes = últimos 30 días; Mes en curso = desde el día 1 hasta el último dato; Mes anterior = mes calendario completo.</li>
+        <li>Diciembre 2025 tiene precio pero no monto, así que queda fuera de los cálculos ponderados.</li>
+        <li>Las transacciones existen desde <span id="nFrom"></span> y con huecos. El ticket promedio usa solo los días con monto y transacciones.</li>
+        <li>† Banco PyME o de poca relevancia (Ecofuturo y Bancomunidad). En la tabla y en las burbujas el † también marca muestra delgada en el período: menos de 0,2% del monto del mercado, o datos en menos de la mitad de los días. La prima de estos bancos no es una señal confiable.</li>
+        <li>Un día con monto grande y precio lejos del mercado mueve mucho el PPP de un banco. Ante primas extremas conviene revisar la fuente.</li>
+      </ul>
+    </details>
+    <p><a class="back-foot" href="../">← Volver a Tipo de cambio</a></p>
+    <div class="foot-pad"></div>
+  </footer>
+</div>
+
+<script>
+/* Los datos ya no van pegados: se leen de data.json, el mismo archivo que alimenta el home
+   y que actualiza el scraper (GitHub Actions). Esta página se actualiza al mismo ritmo. */
+function buildData(json){
+  const banksObj = (json && json.banks) || {};
+  const names = (json.bank_names && json.bank_names.length ? json.bank_names : Object.keys(banksObj));
+  const banks = [], dateSet = new Set(), tmp = [];
+  names.forEach(function(full){
+    const ser = banksObj[full]; if (!ser) return;
+    const bi = banks.push(full.replace(/^Banco\s+/,'')) - 1;
+    ser.forEach(function(r){
+      // Solo días con precio y monto: sin monto no se puede ponderar
+      if (r.rate == null || r.monto == null || !(r.monto > 0)) return;
+      dateSet.add(r.date);
+      tmp.push([bi, r.date, r.rate, r.monto, r.n == null ? null : r.n]);
+    });
+  });
+  const dates = Array.from(dateSet).sort();
+  const idx = {}; dates.forEach(function(d,i){ idx[d] = i; });
+  return {banks: banks, dates: dates, rows: tmp.map(function(r){ return [r[0], idx[r[1]], r[2], r[3], r[4]]; })};
+}
+function loadFail(msg){
+  document.querySelectorAll('.reveal,.reveal-top').forEach(function(el){ el.classList.add('in-view'); });
+  const el = document.getElementById('spHead');
+  if (el) el.textContent = msg;
+}
+fetch('../data.json?t=' + Date.now(), {cache:'no-store'})
+  .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function(json){
+    const D = buildData(json);
+    if (!D.rows.length) throw new Error('sin filas con monto');
+    boot(D);
+  })
+  .catch(function(e){
+    console.error('No se pudo cargar data.json:', e);
+    loadFail('No se pudieron cargar los datos. Recarga la página en unos minutos.');
+  });
+
+function boot(DATA){
+
+/*LOGIC_START*/
+const NAMES = {'Economico':'Económico','Union':'Unión','de Credito':'BCP','Mercantil Santa Cruz':'Mercantil BMSC','Nacional de Bolivia':'Nacional - BNB','Solidario':'SOL','de la Nacion Argentina':'Nación Argentina','PyME Ecofuturo':'Ecofuturo','PyME de la Comunidad':'Bancomunidad'};
+const SHORT = {'Mercantil Santa Cruz':'BMSC','Nacional de Bolivia':'BNB','de la Nacion Argentina':'Nación Arg.','PyME de la Comunidad':'Bancomunidad','PyME Ecofuturo':'Ecofuturo','de Credito':'BCP','Solidario':'SOL','Economico':'Económico','Union':'Unión'};
+const MES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const disp = b => NAMES[b] || b;
+const shortName = b => SHORT[b] || disp(b);
+// Bancos PyME o de poca relevancia: llevan † junto al nombre. Para sumar otros, agregar su nombre del CSV a esta lista.
+const SMALL = new Set(['PyME Ecofuturo','PyME de la Comunidad']);
+const dispF = b => disp(b)+(SMALL.has(b) ? ' †' : '');
+
+const BANKS = DATA.banks;
+const ROWS = DATA.rows.map(r => ({b:BANKS[r[0]], date:DATA.dates[r[1]], t:r[2], m:r[3], n:r[4]}));
+const FIRST = DATA.dates[0];
+const LAST = DATA.dates[DATA.dates.length-1];
+
+// PPP del mercado por día (todos los bancos)
+const MK = {};
+(function(){
+  const acc = {};
+  for (const r of ROWS){ const a = acc[r.date] || (acc[r.date] = {m:0,p:0}); a.m += r.m; a.p += r.t*r.m; }
+  for (const d in acc) MK[d] = acc[d].p/acc[d].m;
+})();
+const FIRST_N = ROWS.filter(r => r.n != null).map(r => r.date).sort()[0];
+
+function aggregate(rows){
+  let m=0,pxm=0,tsum=0,prem=0,n=0,nm=0;
+  const days = new Set();
+  for (const r of rows){
+    m += r.m; pxm += r.t*r.m; tsum += r.t; prem += (r.t-MK[r.date])*r.m; days.add(r.date);
+    if (r.n != null){ n += r.n; nm += r.m; }
+  }
+  return {
+    m, n, days:days.size, rows:rows.length,
+    ppp: m ? pxm/m : null,
+    simple: rows.length ? tsum/rows.length : null,
+    prima: m ? prem/m : null,
+    ticket: n ? nm/n : null,
+    hasN: nm > 0
+  };
+}
+function weekKey(ds){
+  const d = new Date(ds+'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay()+6)%7));
+  return d.toISOString().slice(0,10);
+}
+function addDays(ds,n){
+  const d = new Date(ds+'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate()+n);
+  return d.toISOString().slice(0,10);
+}
+// Rangos rápidos, calculados desde el último dato disponible (LAST)
+function presetRange(k){
+  const y = +LAST.slice(0,4), m = +LAST.slice(5,7);
+  let r;
+  if (k === 'sem') r = {from:addDays(LAST,-6),  to:LAST};
+  else if (k === '15d') r = {from:addDays(LAST,-14), to:LAST};
+  else if (k === '30d') r = {from:addDays(LAST,-29), to:LAST};
+  else if (k === 'mes') r = {from:LAST.slice(0,8)+'01', to:LAST};
+  else if (k === 'ant') r = {from:new Date(Date.UTC(y,m-2,1)).toISOString().slice(0,10), to:new Date(Date.UTC(y,m-1,0)).toISOString().slice(0,10)};
+  else r = {from:FIRST, to:LAST};
+  if (r.from < FIRST) r.from = FIRST;
+  return r;
+}
+
+const _nf = {};
+function fmt(v,d){
+  const f = _nf[d] || (_nf[d] = new Intl.NumberFormat('es-BO',{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:'always'}));
+  return f.format(v);
+}
+function fmtSigned(v,d){
+  const r = +v.toFixed(d);
+  if (r === 0) return fmt(0,d);
+  return (r > 0 ? '+' : '−') + fmt(Math.abs(r),d);
+}
+function usd(v){
+  if (v == null || isNaN(v)) return '—';
+  const a = Math.abs(v);
+  if (a >= 1e9) return fmt(v/1e6,0)+' MM';
+  if (a >= 1e7) return fmt(v/1e6,1)+' MM';
+  if (a >= 1e6) return fmt(v/1e6,2)+' MM';
+  if (a >= 1e3) return fmt(v/1e3,0)+' mil';
+  return fmt(v,0);
+}
+function fmtDate(ds, withYear){
+  const [y,m,d] = ds.split('-');
+  return (+d)+' '+MES[+m-1]+(withYear ? ' '+y : '');
+}
+/*LOGIC_END*/
+
+/* ---------- Estado ---------- */
+const MAXSEL = 3;
+const state = {from:FIRST, to:LAST, gran:'dia', range:'mes', sel:new Set(), sort:{k:'m',dir:-1}};
+const $ = id => document.getElementById(id);
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const MONO = "'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace";
+const charts = {};
+
+// Colores de marca por banco: los mismos del sitio Pulso Económico
+const BANK_COLORS = {
+  'BISA':'#F5B700','Economico':'#ED1C24','FIE':'#DF1583','Fortaleza':'#1C529C','Ganadero':'#2E7D32',
+  'Mercantil Santa Cruz':'#3D8A25','Nacional de Bolivia':'#00A651','PRODEM':'#7CB342','PyME Ecofuturo':'#F57C00',
+  'PyME de la Comunidad':'#D4A017','Solidario':'#46009B','Union':'#005E9E','de Credito':'#F7941D','de la Nacion Argentina':'#75AADB'
+};
+const bankColor = b => BANK_COLORS[b] || '#888888';
+function onColor(hex){
+  const h = hex.replace('#','');
+  const L = (0.2126*parseInt(h.slice(0,2),16) + 0.7152*parseInt(h.slice(2,4),16) + 0.0722*parseInt(h.slice(4,6),16))/255;
+  return L > 0.62 ? '#0a0a0a' : '#ffffff';
+}
+function alpha(hex,a){
+  const h = hex.replace('#','');
+  if (h.length !== 6) return hex;
+  return 'rgba('+parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16)+','+a+')';
+}
+
+const periodRows = () => ROWS.filter(r => r.date >= state.from && r.date <= state.to);
+function rankBanks(rows){
+  const m = {};
+  for (const r of rows) m[r.b] = (m[r.b] || 0) + r.m;
+  return BANKS.filter(b => m[b]).sort((a,b) => m[b]-m[a]);
+}
+
+// Agrupación (hoy solo 'dia'; el código de semana y mes sigue disponible)
+function bucketKey(ds){ return state.gran==='dia' ? ds : state.gran==='semana' ? weekKey(ds) : ds.slice(0,7); }
+function bucketLabel(k){
+  if (state.gran==='mes'){ const p = k.split('-'); return MES[+p[1]-1]+' '+p[0].slice(2); }
+  return fmtDate(k,false);
+}
+function bucketTitle(k){
+  if (state.gran==='mes'){ const p = k.split('-'); return MES[+p[1]-1]+' '+p[0]; }
+  if (state.gran==='semana') return 'Semana del '+fmtDate(k,true);
+  return fmtDate(k,true);
+}
+function groupBy(rows){
+  const g = new Map();
+  for (const r of rows){ const k = bucketKey(r.date); let a = g.get(k); if(!a){ a = []; g.set(k,a); } a.push(r); }
+  return g;
+}
+
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function rangeName(){
+  const mes = () => ' ('+MESES[+state.from.slice(5,7)-1]+' '+state.from.slice(0,4)+')';
+  switch (state.range){
+    case 'sem': return 'la última semana';
+    case '15d': return 'los últimos 15 días';
+    case '30d': return 'el último mes';
+    case 'mes': return 'el mes en curso'+mes();
+    case 'ant': return 'el mes anterior'+mes();
+    default: return 'el período seleccionado';
+  }
+}
+function joinNames(a){ return a.length < 2 ? (a[0] || '') : a.slice(0,-1).join(', ')+' y '+a[a.length-1]; }
+
+/* ---------- Render ---------- */
+function render(){
+  const pr = periodRows();
+  const mkt = aggregate(pr);
+  const selBanks = BANKS.filter(b => state.sel.has(b));
+  const sel = aggregate(pr.filter(r => state.sel.has(r.b)));
+  const perSel = selBanks.map(b => { const a = aggregate(pr.filter(r => r.b === b)); a.bank = b; return a; }).filter(a => a.rows > 0);
+  const marketDays = mkt.days;
+
+  const ds = [...new Set(pr.map(r => r.date))].sort();
+  const rangeTxt = ds.length ? fmtDate(ds[0],true)+' al '+fmtDate(ds[ds.length-1],true)+' · '+ds.length+' días con datos' : 'Sin datos en el período';
+  $('hintRange1').textContent = rangeTxt;
+  $('asof').textContent = 'Datos al '+fmtDate(LAST,true);
+
+  const allAggs = BANKS.map(b => {
+    const a = aggregate(pr.filter(r => r.b === b));
+    a.bank = b;
+    a.share = mkt.m ? a.m/mkt.m : 0;
+    a.thin = a.share < 0.002 || a.days < 0.5*marketDays;
+    return a;
+  }).filter(a => a.rows > 0);
+
+  renderChips();
+  renderSpotlight(mkt, sel, perSel, allAggs, selBanks);
+  renderTiles(mkt, sel);
+  renderLine(pr, selBanks);
+  renderBar(pr);
+  renderBubble(allAggs);
+  renderTable(allAggs, mkt);
+}
+
+function renderChips(){
+  const el = $('chips'); el.innerHTML = '';
+  const isSys = state.sel.size === 0;
+  const full = state.sel.size >= MAXSEL;
+  const sys = document.createElement('button');
+  sys.type = 'button';
+  sys.className = 'pill pill-sistema'+(isSys ? ' active' : '');
+  sys.textContent = 'Sistema financiero';
+  sys.setAttribute('aria-pressed', isSys ? 'true' : 'false');
+  sys.addEventListener('click', () => { state.sel.clear(); render(); });
+  el.appendChild(sys);
+  for (const b of BANKS){
+    const on = state.sel.has(b);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pill pill-bank'+(on ? ' active' : '');
+    btn.style.setProperty('--b', bankColor(b));
+    btn.style.setProperty('--on', onColor(bankColor(b)));
+    btn.textContent = dispF(b);
+    if (SMALL.has(b) && !btn.title) btn.title = 'PyME o banco de poca relevancia';
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (!on && full){ btn.disabled = true; btn.title = 'Máximo '+MAXSEL+' bancos. Quita uno para elegir otro.'; }
+    btn.addEventListener('click', () => {
+      if (on) state.sel.delete(b);
+      else if (state.sel.size < MAXSEL) state.sel.add(b);
+      render();
+    });
+    el.appendChild(btn);
+  }
+  $('chipHint').textContent = isSys
+    ? 'Mostrando todo el sistema. Elige hasta '+MAXSEL+' bancos para compararlos.'
+    : state.sel.size+' de '+MAXSEL+' · el sistema financiero siempre se muestra';
+}
+
+function renderSpotlight(mkt, sel, per, allAggs, selBanks){
+  const isSys = state.sel.size === 0;
+  const base = isSys ? mkt : sel;       // sin bancos elegidos, todo el sistema
+  const rn = rangeName();
+
+  // Titular
+  let head;
+  if (!mkt.rows) head = 'Sin datos en '+rn+'.';
+  else if (!base.rows) head = 'Los bancos elegidos no operaron en '+rn+'.';
+  else if (isSys) head = 'En '+rn+', el sistema financiero compró USD '+usd(mkt.m)+' a un precio promedio ponderado de Bs '+fmt(mkt.ppp,2)+' por dólar.';
+  else {
+    const names = selBanks.map(disp), one = names.length === 1;
+    const d = sel.prima, r = +d.toFixed(2);
+    const cmp = r === 0 ? 'igual al mercado del mismo día' : fmt(Math.abs(d),2)+' Bs '+(r < 0 ? 'más barato' : 'más caro')+' que el mercado del mismo día';
+    head = 'En '+rn+', '+joinNames(names)+(one ? ' compró' : ' compraron')+' USD '+usd(sel.m)+' ('+fmt(sel.m/mkt.m*100,1)+'% del mercado) a un PPP de Bs '+fmt(sel.ppp,2)+': '+cmp+'.';
+  }
+  $('spHead').textContent = head;
+
+  // Monto y PPP
+  if (!base.rows){
+    $('spMonto').textContent = '—'; $('spPpp').textContent = '—'; $('spPppChip').innerHTML = '';
+    $('spMontoCtx').textContent = ''; $('spPppCtx').textContent = '';
+  } else {
+    const u = usd(base.m), mm = u.match(/^(.*) (MM|mil)$/);
+    $('spMonto').innerHTML = (mm ? mm[1] : u)+'<span class="s-unit">'+(mm ? mm[2]+' ' : '')+'USD</span>';
+    $('spMontoCtx').textContent = isSys ? 'Todo el sistema financiero · '+base.days+' días con datos' : fmt(base.m/mkt.m*100,1)+'% del mercado (USD '+usd(mkt.m)+')';
+    $('spPpp').innerHTML = fmt(base.ppp,2)+'<span class="s-unit">Bs/USD</span>';
+    if (isSys){
+      $('spPppChip').innerHTML = '';
+      $('spPppCtx').textContent = 'Promedio simple: '+fmt(base.simple,2);
+    } else {
+      const d = sel.prima, r = +d.toFixed(2);
+      $('spPppChip').innerHTML = r === 0 ? '' : '<span class="s-chip '+(r < 0 ? 'down' : 'up')+'">'+fmtSigned(d,2)+' vs mercado</span>';
+      $('spPppCtx').textContent = 'Mercado del mismo día. Promedio simple: '+fmt(base.simple,2);
+    }
+  }
+
+  // Más alto y más bajo
+  $('spHLLbl').textContent = isSys ? 'PPP más alto y más bajo del sistema' : 'PPP más alto y más bajo de la selección';
+  const pool = isSys ? allAggs.filter(a => !a.thin) : per;
+  const box = $('spHL');
+  if (pool.length < 2){
+    box.innerHTML = '<div class="hl-note">'+(isSys ? 'Sin datos suficientes en el período.' : pool.length ? 'Elige un segundo banco para comparar.' : 'Elige 2 o 3 bancos para comparar.')+'</div>';
+    $('spHLCtx').textContent = '';
+    return;
+  }
+  const sorted = [...pool].sort((a,b) => a.ppp - b.ppp);
+  const lo = sorted[0], hi = sorted[sorted.length-1];
+  const row = (k,a,cls) => '<div class="hl-row"><span class="hl-v '+cls+'">'+fmt(a.ppp,2)+'</span><span class="hl-b">'+dispF(a.bank)+'</span><span class="hl-k">'+k+'</span></div>';
+  box.innerHTML = row('más alto',hi,'bad')+row('más bajo',lo,'good');
+  $('spHLCtx').textContent = 'Diferencia: '+fmt(hi.ppp-lo.ppp,2)+' Bs por USD.'+(isSys ? ' Excluye bancos con muestra delgada.' : '');
+}
+
+function renderTiles(mkt, sel){
+  const isSys = state.sel.size === 0;
+  const base = isSys ? mkt : sel;
+  const ok = base.rows > 0;
+  const tiles = [
+    {l:'N° de transacciones', v: ok && base.hasN ? fmt(base.n,0) : '—', s: 'Datos desde '+fmtDate(FIRST_N,true)},
+    {l:'Ticket promedio', v: ok && base.ticket ? 'USD '+usd(base.ticket) : '—', s:'Monto ÷ transacciones'},
+    {l:'Participación', v: ok ? (isSys ? '100%' : fmt(base.m/mkt.m*100,1)+'%') : '—', s: isSys ? 'Todo el sistema' : 'Del monto del sistema'},
+    {l:'PPP promedio simple', v: ok ? fmt(base.simple,2) : '—', s:'Sin ponderar por monto'},
+    {l:'Días con datos', v: ok ? String(base.days) : '—', s: fmtDate(state.from,false)+' al '+fmtDate(state.to,false)}
+  ];
+  $('kpiRow').innerHTML = tiles.map(t => '<div class="kpi"><div class="label">'+t.l+'</div><div class="value">'+t.v+'</div><div class="sub">'+t.s+'</div></div>').join('');
+}
+
+function setEmpty(id, msg){
+  const e = $(id); e.textContent = msg || ''; e.classList.toggle('on', !!msg);
+}
+function destroy(k){ if (charts[k]){ charts[k].destroy(); charts[k] = null; } }
+function legendHTML(items){
+  return items.map(i => {
+    const st = i.dash ? 'background:repeating-linear-gradient(90deg,'+i.color+' 0 5px,transparent 5px 9px)' : 'background:'+i.color;
+    return '<span class="item"><span class="swatch'+(i.line ? ' line' : '')+'" style="'+st+'"></span>'+i.label+'</span>';
+  }).join('');
+}
+function tipStyle(){
+  return {
+    backgroundColor:cssv('--ink'), titleColor:cssv('--muted'), bodyColor:cssv('--surface'), footerColor:cssv('--muted'),
+    titleFont:{family:MONO,size:10.5,weight:'400'}, bodyFont:{family:MONO,size:11.5}, footerFont:{family:MONO,size:10.5,weight:'400'},
+    cornerRadius:8, padding:{x:10,y:7}, boxPadding:4, borderWidth:0
+  };
+}
+// Solo 3 etiquetas en el eje X (primera, media, última), como en Pulso
+function xTicksFn(n){
+  const mid = Math.floor((n-1)/2);
+  return function(v,i){ return (i===0 || i===mid || i===n-1) ? this.getLabelForValue(v) : ''; };
+}
+function axisBase(){
+  return {tick:cssv('--muted'), grid:cssv('--grid')};
+}
+
+// Etiqueta al final de cada línea, con separación para que no se pisen
+const endLabels = {
+  id:'endLabels',
+  afterDatasetsDraw(chart){
+    const items = [];
+    chart.data.datasets.forEach((d,di) => {
+      if (!d.endLabel) return;
+      const meta = chart.getDatasetMeta(di); if (meta.hidden) return;
+      let li = -1; for (let i = d.data.length-1; i >= 0; i--){ if (d.data[i] != null){ li = i; break; } }
+      const el = li >= 0 ? meta.data[li] : null; if (!el) return;
+      items.push({x:el.x, y:el.y, t:d.endLabel, c:d.endColor});
+    });
+    items.sort((a,b) => a.y-b.y);
+    for (let i = 1; i < items.length; i++) if (items[i].y - items[i-1].y < 13) items[i].y = items[i-1].y + 13;
+    const ctx = chart.ctx; ctx.save();
+    ctx.font = '500 10.5px '+MONO; ctx.textBaseline = 'middle';
+    for (const it of items){
+      ctx.fillStyle = it.c; ctx.fillRect(it.x+9, it.y-3, 6, 6);
+      ctx.fillStyle = cssv('--ink-2'); ctx.fillText(it.t, it.x+19, it.y);
+    }
+    ctx.restore();
+  }
+};
+
+function renderLine(pr, selBanks){
+  destroy('line');
+  if (!window.Chart){ setEmpty('eLine','No se pudo cargar la librería de gráficos.'); return; }
+  if (!pr.length){ setEmpty('eLine','Sin datos en el período.'); $('legLine').innerHTML = ''; return; }
+  setEmpty('eLine','');
+  const gm = groupBy(pr);
+  const keys = [...gm.keys()].sort();
+  const pppOf = rows => { const g = groupBy(rows); return keys.map(k => { const a = g.get(k); return a ? aggregate(a).ppp : null; }); };
+  const {tick, grid} = axisBase();
+  const isSys = selBanks.length === 0;
+  const accent = cssv('--accent'), avg = cssv('--series-avg'), surface = cssv('--surface');
+  const shapes = ['circle','rectRot','triangle'];
+  const lastOf = a => { for (let i = a.length-1; i >= 0; i--) if (a[i] != null) return i; return -1; };
+  const mk = (label, data, color, width, dash, shape, short) => {
+    const last = lastOf(data);
+    return {label, data, borderColor:color, backgroundColor:color, borderWidth:width, borderDash:dash, tension:0, spanGaps:true,
+      borderJoinStyle:'round', borderCapStyle:'round', pointStyle:shape,
+      pointRadius:c => c.dataIndex === last ? 4 : 0, pointHoverRadius:5, pointHoverBackgroundColor:color, pointHoverBorderColor:surface, pointHoverBorderWidth:1.5,
+      endLabel:short, endColor:color};
+  };
+  // Sistema financiero: azul sólido si está solo; gris punteado cuando se compara con bancos (como en Pulso)
+  const ds = [mk('Sistema financiero', keys.map(k => aggregate(gm.get(k)).ppp), isSys ? accent : avg, isSys ? 2.25 : 1.5, isSys ? [] : [5,4], 'rect', 'Sistema')];
+  const legend = [{label:'Sistema financiero', color:isSys ? accent : avg, line:true, dash:!isSys}];
+  selBanks.forEach((b,i) => {
+    const rows = pr.filter(r => r.b === b);
+    if (!rows.length) return;
+    ds.push(mk(dispF(b), pppOf(rows), bankColor(b), 2.25, [], shapes[i % 3], shortName(b)));
+    legend.push({label:dispF(b), color:bankColor(b), line:true});
+  });
+  $('legLine').innerHTML = legendHTML(legend);
+  charts.line = new Chart($('cLine'), {
+    type:'line',
+    data:{labels:keys.map(bucketLabel), datasets:ds},
+    plugins:[endLabels],
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{padding:{right:96, top:6}},
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:Object.assign(tipStyle(), {
+          filter:i => i.parsed.y != null,
+          itemSort:(a,b) => a.parsed.y - b.parsed.y,
+          callbacks:{ title:i => bucketTitle(keys[i[0].dataIndex]), label:c => c.dataset.label+': '+fmt(c.parsed.y,2) }
+        })
+      },
+      scales:{
+        x:{grid:{display:false}, border:{color:grid}, ticks:{color:tick, autoSkip:false, maxRotation:0, font:{family:MONO,size:10}, callback:xTicksFn(keys.length)}},
+        y:{grace:'8%', grid:{color:grid, drawTicks:false}, border:{display:false}, ticks:{color:tick, maxTicksLimit:5, padding:8, font:{family:MONO,size:10}, callback:v => fmt(v,2)}}
+      }
+    }
+  });
+}
+
+function renderBar(pr){
+  destroy('bar');
+  if (!window.Chart){ setEmpty('eBar','No se pudo cargar la librería de gráficos.'); return; }
+  if (!pr.length){ setEmpty('eBar','Sin datos en el período.'); $('legBar').innerHTML = ''; return; }
+  setEmpty('eBar','');
+  // Todo el sistema. Con color: bancos elegidos + 3 mayores del período. El resto: Otros.
+  const top3 = rankBanks(pr).slice(0,3);
+  const colored = BANKS.filter(b => state.sel.has(b) || top3.includes(b));
+  const acc = {};
+  for (const r of pr){ const k = bucketKey(r.date); const o = acc[k] || (acc[k] = {}); o[r.b] = (o[r.b] || 0) + r.m; }
+  const keys = Object.keys(acc).sort();
+  const others = BANKS.filter(b => !colored.includes(b));
+  const otrosOf = i => others.reduce((s,b) => s + (acc[keys[i]][b] || 0), 0);
+  const {tick, grid} = axisBase();
+  const surface = cssv('--surface');
+  const ds = colored.map(b => ({label:dispF(b), data:keys.map(k => acc[k][b] || 0), backgroundColor:bankColor(b), borderColor:surface, borderWidth:1, maxBarThickness:42}));
+  const legend = colored.map(b => ({label:dispF(b), color:bankColor(b)}));
+  if (keys.some((k,i) => otrosOf(i) > 0)){
+    ds.push({label:'Otros', isOtros:true, data:keys.map((k,i) => otrosOf(i)), backgroundColor:cssv('--series-avg'), borderColor:surface, borderWidth:1, maxBarThickness:42});
+    legend.push({label:'Otros', color:cssv('--series-avg')});
+  }
+  $('legBar').innerHTML = legendHTML(legend);
+  const total = i => Object.values(acc[keys[i]]).reduce((s,v) => s + v, 0);
+  charts.bar = new Chart($('cBar'), {
+    type:'bar',
+    data:{labels:keys.map(bucketLabel), datasets:ds},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:Object.assign(tipStyle(), {
+          filter:i => i.parsed.y > 0,
+          itemSort:(a,b) => ((a.dataset.isOtros?1:0)-(b.dataset.isOtros?1:0)) || (b.parsed.y-a.parsed.y),
+          callbacks:{
+            title:i => bucketTitle(keys[i[0].dataIndex]),
+            label:c => {
+              if (!c.dataset.isOtros) return c.dataset.label+': USD '+usd(c.parsed.y);
+              const rows = others.filter(b => acc[keys[c.dataIndex]][b] > 0).sort((x,y) => acc[keys[c.dataIndex]][y]-acc[keys[c.dataIndex]][x]);
+              return ['Otros: USD '+usd(c.parsed.y)].concat(rows.map(b => '    '+dispF(b)+': USD '+usd(acc[keys[c.dataIndex]][b])));
+            },
+            footer:i => 'Total sistema: USD '+usd(total(i[0].dataIndex))
+          }
+        })
+      },
+      scales:{
+        x:{stacked:true, grid:{display:false}, border:{color:grid}, ticks:{color:tick, autoSkip:false, maxRotation:0, font:{family:MONO,size:10}, callback:xTicksFn(keys.length)}},
+        y:{stacked:true, beginAtZero:true, grid:{color:grid, drawTicks:false}, border:{display:false}, ticks:{color:tick, maxTicksLimit:5, padding:8, font:{family:MONO,size:10}, callback:v => usd(v)}}
+      }
+    }
+  });
+}
+
+const labelPlugin = {
+  id:'pointLabels',
+  afterDatasetsDraw(chart){
+    const ds = chart.data.datasets[0]; if (!ds) return;
+    const meta = chart.getDatasetMeta(0), ctx = chart.ctx;
+    ctx.save();
+    ctx.font = '500 10.5px '+MONO; ctx.textBaseline = 'middle'; ctx.fillStyle = cssv('--ink-2');
+    meta.data.forEach((el,i) => {
+      const p = ds.data[i]; if (!p || !p.showLabel) return;
+      const rad = (el.options && el.options.radius) || p.r || 6;
+      ctx.fillText(p.label, el.x+rad+4, el.y);
+    });
+    ctx.restore();
+  }
+};
+
+function renderBubble(aggs){
+  destroy('bub');
+  if (!window.Chart){ setEmpty('eBub','No se pudo cargar la librería de gráficos.'); return; }
+  const pts = aggs.filter(a => a.m > 0);
+  if (!pts.length){ setEmpty('eBub','Sin datos en el período.'); return; }
+  setEmpty('eBub','');
+  const maxN = Math.max(0, ...pts.map(a => a.n));
+  const good = cssv('--good'), bad = cssv('--bad'), neutral = cssv('--series-avg');
+  const data = pts.map(a => ({
+    x:a.m, y:a.prima, r: a.n>0 && maxN>0 ? 6+18*Math.sqrt(a.n/maxN) : 5,
+    label:shortName(a.bank), bank:a.bank, ppp:a.ppp, n:a.n, hasN:a.hasN, thin:a.thin,
+    showLabel: !a.thin
+  }));
+  const col = a => a.prima < -0.005 ? good : a.prima > 0.005 ? bad : neutral;
+  const {tick, grid} = axisBase();
+  charts.bub = new Chart($('cBub'), {
+    type:'bubble',
+    data:{datasets:[{
+      data,
+      backgroundColor: pts.map(a => a.thin ? 'rgba(0,0,0,0)' : alpha(col(a),.5)),
+      borderColor: pts.map(a => col(a)),
+      borderWidth: 1.5
+    }]},
+    plugins:[labelPlugin],
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      layout:{padding:{right:70}},
+      plugins:{legend:{display:false}, tooltip:Object.assign(tipStyle(), {callbacks:{
+        title:i => disp(i[0].raw.bank)+((i[0].raw.thin || SMALL.has(i[0].raw.bank)) ? ' †' : ''),
+        label:c => {
+          const r = c.raw;
+          return ['Monto: USD '+usd(r.x), 'PPP: '+fmt(r.ppp,2)+' Bs', 'Prima vs mercado: '+fmtSigned(r.y,2)+' Bs', 'Transacciones: '+(r.hasN ? fmt(r.n,0) : 'sin dato')];
+        }
+      }})},
+      scales:{
+        x:{type:'logarithmic', grid:{color:grid, drawTicks:false}, border:{display:false}, ticks:{color:tick, padding:8, font:{family:MONO,size:10}, callback:v => { const l = Math.log10(v); return Math.abs(l-Math.round(l))<1e-9 ? usd(v) : ''; }},
+           title:{display:true, text:'Monto comprado (USD, escala logarítmica)', color:tick, font:{family:MONO,size:10}}},
+        y:{grace:'10%', border:{display:false}, grid:{color:ctx => ctx.tick && ctx.tick.value === 0 ? cssv('--series-avg') : grid, lineWidth:ctx => ctx.tick && ctx.tick.value === 0 ? 1.5 : 1, drawTicks:false},
+           ticks:{color:tick, padding:8, font:{family:MONO,size:10}, callback:v => fmtSigned(v,1)},
+           title:{display:true, text:'Prima vs mercado (Bs/USD) · arriba es más caro', color:tick, font:{family:MONO,size:10}}}
+      }
+    }
+  });
+}
+
+const COLS = [
+  {k:'name',  l:'Banco'},
+  {k:'m',     l:'Monto (USD)'},
+  {k:'share', l:'% mercado'},
+  {k:'ppp',   l:'PPP (Bs)'},
+  {k:'prima', l:'Prima vs mercado (Bs)'},
+  {k:'n',     l:'Transacciones'},
+  {k:'ticket',l:'Ticket prom.'}
+];
+function renderTable(aggs, total){
+  const t = $('tbl');
+  if (!aggs.length){ t.innerHTML = '<tbody><tr><td style="text-align:left;color:var(--muted);padding:16px 0;font-family:var(--font-ui);font-weight:400">Sin datos en el período.</td></tr></tbody>'; return; }
+  const {k,dir} = state.sort;
+  const val = a => k==='name' ? disp(a.bank) : (a[k] == null ? -Infinity : a[k]);
+  const rows = [...aggs].sort((a,b) => {
+    const x = val(a), y = val(b);
+    const c = (typeof x === 'string') ? x.localeCompare(y,'es') : (x<y ? -1 : x>y ? 1 : 0);
+    return c*dir;
+  });
+  const maxM = Math.max(...rows.map(a => a.m));
+  const maxAbs = Math.max(0.3, ...rows.map(a => Math.abs(a.prima)));
+  let h = '<thead><tr>';
+  for (const c of COLS){
+    const sorted = k===c.k ? (dir===1 ? 'ascending' : 'descending') : null;
+    h += '<th scope="col"'+(sorted ? ' aria-sort="'+sorted+'"' : '')+'><button type="button" data-sort="'+c.k+'">'+c.l+'</button></th>';
+  }
+  h += '</tr></thead><tbody>';
+  for (const a of rows){
+    const r = +a.prima.toFixed(2), cls = r<0 ? 'good' : r>0 ? 'bad' : '';
+    const w = Math.min(48, Math.abs(a.prima)/maxAbs*48);
+    const bar = r===0 ? '' : r<0 ? '<i class="g" style="right:50%;width:'+w+'px"></i>' : '<i class="r" style="left:50%;width:'+w+'px"></i>';
+    h += '<tr>'
+      + '<td><span class="bsw" style="background:'+bankColor(a.bank)+'"></span>'+disp(a.bank)+((a.thin || SMALL.has(a.bank)) ? ' <span class="dim" title="PyME, poca relevancia o muestra delgada">†</span>' : '')+'</td>'
+      + '<td><span class="mbar"><i style="width:'+(a.m/maxM*100).toFixed(1)+'%"></i><span>'+usd(a.m)+'</span></span></td>'
+      + '<td>'+fmt(a.share*100, a.share<0.01 ? 2 : 1)+'%</td>'
+      + '<td>'+fmt(a.ppp,2)+'</td>'
+      + '<td><span class="prima"><span class="track">'+bar+'</span><span class="num '+cls+'">'+fmtSigned(a.prima,2)+'</span></span></td>'
+      + '<td class="muted">'+(a.hasN ? fmt(a.n,0) : '—')+'</td>'
+      + '<td class="muted">'+(a.ticket ? usd(a.ticket) : '—')+'</td></tr>';
+  }
+  h += '</tbody><tfoot><tr><td>Total sistema</td><td>'+usd(total.m)+'</td><td>100%</td><td>'+fmt(total.ppp,2)+'</td><td><span class="prima"><span class="track"></span><span class="num">—</span></span></td><td class="muted">'+(total.hasN ? fmt(total.n,0) : '—')+'</td><td class="muted">'+(total.ticket ? usd(total.ticket) : '—')+'</td></tr></tfoot>';
+  t.innerHTML = h;
+  t.querySelectorAll('button[data-sort]').forEach(btn => btn.addEventListener('click', () => {
+    const key = btn.dataset.sort;
+    if (state.sort.k === key) state.sort.dir *= -1;
+    else state.sort = {k:key, dir: key==='name' || key==='prima' ? 1 : -1};
+    render();
+  }));
+}
+
+/* ---------- Controles ---------- */
+function syncInputs(){ $('fFrom').value = state.from; $('fTo').value = state.to; }
+function markRange(){
+  document.querySelectorAll('#quick .pill').forEach(b => {
+    const on = b.dataset.range === state.range;
+    b.classList.toggle('active', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+function setRange(k){
+  const r = presetRange(k);
+  state.from = r.from; state.to = r.to; state.range = k;
+  syncInputs(); markRange(); render();
+}
+function initReveal(){
+  const els = [...document.querySelectorAll('.reveal,.reveal-top')];
+  const show = e => e.classList.add('in-view');
+  if (!('IntersectionObserver' in window)){ els.forEach(show); return; }
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ show(e.target); io.unobserve(e.target); } }), {threshold:.08});
+  els.forEach(e => io.observe(e));
+  setTimeout(() => els.forEach(show), 2500);   // respaldo si el observador no dispara
+}
+(function init(){
+  const fFrom = $('fFrom'), fTo = $('fTo');
+  fFrom.min = fTo.min = FIRST; fFrom.max = fTo.max = LAST;
+  // Fechas manuales (ocultas hoy): si se habilitan, desmarcan el rango rápido
+  fFrom.addEventListener('change', () => { state.from = fFrom.value || FIRST; state.range = null; markRange(); render(); });
+  fTo.addEventListener('change', () => { state.to = fTo.value || LAST; state.range = null; markRange(); render(); });
+  document.querySelectorAll('#quick .pill').forEach(b => {
+    const r = presetRange(b.dataset.range);
+    b.title = fmtDate(r.from,true)+' al '+fmtDate(r.to,true);
+    b.addEventListener('click', () => setRange(b.dataset.range));
+  });
+  // Agrupación (oculta hoy)
+  document.querySelectorAll('#gran .pill').forEach(b => b.addEventListener('click', () => {
+    state.gran = b.dataset.gran;
+    document.querySelectorAll('#gran .pill').forEach(x => { x.classList.toggle('active', x===b); x.setAttribute('aria-pressed', x===b ? 'true' : 'false'); });
+    render();
+  }));
+  document.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => {
+    state.sel = new Set(b.dataset.pick==='top3' ? rankBanks(periodRows()).slice(0,MAXSEL) : []);
+    render();
+  }));
+  $('nFrom').textContent = fmtDate(FIRST_N,true);
+  const r = presetRange(state.range);
+  state.from = r.from; state.to = r.to;
+  syncInputs(); markRange();
+  state.sel = new Set(); // por defecto: sistema financiero
+  // Redibujar al cambiar el tema del visor
+  if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+  new MutationObserver(render).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+  render();
+  initReveal();
+})();
+}
+</script>
+</body>
+</html>
