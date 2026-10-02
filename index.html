@@ -120,6 +120,15 @@
     padding: 22px 16px 24px;
     padding-block: max(22px, env(safe-area-inset-top, 0px)) 24px;
   }
+  /* ---------- Navegación común del sitio (igual en todas las páginas) ---------- */
+  .site-nav{ background:var(--bg); border-bottom:1px solid var(--border); padding:0 16px; padding-top:env(safe-area-inset-top, 0px); }
+  .site-nav-inner{ max-width:980px; margin:0 auto; display:flex; align-items:center; gap:6px 22px; flex-wrap:wrap; min-height:46px; padding:6px 0; }
+  .site-brand{ font-family:var(--font-display); font-weight:800; font-size:16px; letter-spacing:-.01em; color:var(--ink); text-decoration:none; margin-right:auto; }
+  .site-group{ display:flex; align-items:center; gap:4px 14px; flex-wrap:wrap; }
+  .site-group-label{ font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .site-nav a.nav-item{ font-family:var(--font-mono); font-size:11.5px; font-weight:500; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-2); text-decoration:none; padding:5px 0; border-bottom:2px solid transparent; }
+  .site-nav a.nav-item:hover{ color:var(--ink); border-bottom-color:var(--border); }
+  .site-nav a.nav-item[aria-current="page"]{ color:var(--ink); font-weight:600; border-bottom-color:var(--accent); }
   .hero-inner{ max-width: 980px; margin: 0 auto; }
   .hero-top{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
   .eyebrow{
@@ -214,6 +223,11 @@
   }
   .section-band .sec-num{ color:rgba(255,255,255,0.5); }
   .section-band h2{ font-family: var(--font-display); font-size:19px; font-weight:700; margin:0; letter-spacing:-.005em; color:var(--hero-ink); }
+  .sec-link{ color:inherit; text-decoration:none; border:1px solid rgba(255,255,255,0.45); padding:4px 10px; display:inline-flex; align-items:baseline; gap:8px; transition:background .1s,color .1s; }
+  .sec-link:hover{ background:#fff; color:#0a0a0a; }
+  .sec-arrow{ font-family:var(--font-mono); font-size:14px; font-weight:500; }
+  .more-row{ margin:16px 0 0; padding-top:12px; border-top:1px solid var(--border); }
+  .more-link{ font-family:var(--font-mono); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--accent-ink); text-decoration:underline; text-underline-offset:3px; }
   .section-band .hint{ font-family: var(--font-mono); font-size:11px; color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:.03em; }
 
   .card{
@@ -303,9 +317,30 @@
   @media (max-width:520px){
     .kpis{ grid-template-columns:repeat(2,1fr); }
   }
+
+  /* ---------- Color de la vertical ----------
+     Cada vertical del sitio tiene un color de acento; el banner sigue negro.
+     Pulso Cambiario = azul. Para otra vertical, cambiar solo --vertical. */
+  :root{ --vertical: var(--accent); }
+  .hero{ border-bottom:5px solid var(--vertical); }
+  .hero-bar, .accent-draw{ background:var(--vertical); }
+  .section-band .accent-draw{ background:#fff; }
+  .site-nav a.nav-item[aria-current="page"]{ border-bottom-color:var(--vertical); }
+  .ticker{ border-top:0; }
 </style>
 </head>
 <body>
+
+<nav class="site-nav" aria-label="Navegación del sitio">
+  <div class="site-nav-inner">
+    <a class="site-brand" href="./">Pulso Económico</a>
+    <div class="site-group">
+      <span class="site-group-label">Pulso Cambiario</span>
+      <a class="nav-item" href="./" aria-current="page">Tipo de cambio</a>
+      <a class="nav-item" href="cambiario/bancos.html">Compras por banco</a>
+    </div>
+  </div>
+</nav>
 
 <header class="hero reveal-top">
   <div class="hero-inner">
@@ -378,7 +413,7 @@
 
   <section class="reveal">
     <div class="section-band">
-      <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">02</span><h2>Tipo de cambio bancario por entidad</h2></div>
+      <div class="sec-title"><span class="accent-draw"></span><span class="sec-num">02</span><h2><a class="sec-link" href="cambiario/bancos.html" title="Ver monto comprado y precio por banco">Tipo de cambio bancario por entidad<span class="sec-arrow" aria-hidden="true">→</span></a></h2></div>
       <span class="hint">Sistema financiero y por banco, referencial BCB</span>
     </div>
     <div class="card">
@@ -388,6 +423,7 @@
       <div class="chart-wrap" id="bankChart" style="margin-top:14px;"></div>
       <div class="legend" id="bankLegend" style="margin-top:8px;"></div>
       <div class="bank-stats" id="bankStats"></div>
+      <p class="more-row"><a class="more-link" href="cambiario/bancos.html">Ampliar información: monto comprado y precio por banco →</a></p>
     </div>
   </section>
 
