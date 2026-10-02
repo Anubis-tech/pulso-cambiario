@@ -20,11 +20,25 @@ import re
 import sys
 import time
 import traceback
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import requests
 
 DATA_PATH = "data.json"
+
+# Bolivia no usa horario de verano - UTC-4 todo el año. Se usa un offset fijo
+# (no zoneinfo/tzdata) para no depender de la base de datos de zonas horarias
+# del runner de GitHub Actions.
+BOLIVIA_TZ = timezone(timedelta(hours=-4), name="America/La_Paz")
+
+
+def bolivia_today():
+    """Fecha calendario de Bolivia 'de hoy' - NO usar datetime.now(timezone.utc)
+    para esto: entre las 20:00 y las 23:59 hora boliviana (00:00-03:59 UTC del
+    día siguiente), tomar la fecha en UTC adelanta el calendario un día antes
+    de que en Bolivia sea medianoche (bug reportado: la página mostraba el
+    corte de "mañana" todavía de noche)."""
+    return datetime.now(BOLIVIA_TZ).strftime("%Y-%m-%d")
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; PulsoCambiarioBot/1.0; "
@@ -375,8 +389,10 @@ def _to_float(s):
 # 3. USDT/BOB paralelo vía Binance P2P
 # ---------------------------------------------------------------------------
 
-def fetch_usdt_bob(data):
-    log("USDT/BOB: consultando Binance P2P ...")
+def _query_binance_p2p():
+    """Una consulta a Binance P2P. Devuelve (prices, info_diagnostico) - nunca
+    lanza por una respuesta vacía, solo por error de red/HTTP (eso lo maneja
+    el caller con el reintento)."""
     body = {
         "asset": "USDT", "fiat": "BOB", "tradeType": "SELL",
         "page": 1, "rows": 10, "payTypes": [], "publisherType": None,
@@ -388,13 +404,37 @@ def fetch_usdt_bob(data):
     j = r.json()
     ads = j.get("data") or []
     prices = [float(a["adv"]["price"]) for a in ads if a.get("adv", {}).get("price")]
+    diag = f"HTTP {r.status_code}, {len(ads)} anuncios en la respuesta"
+    return prices, diag
+
+
+def fetch_usdt_bob(data):
+    log("USDT/BOB: consultando Binance P2P ...")
+    # Binance P2P a veces devuelve 0 anuncios para pedidos que salen desde IPs
+    # de datacenter (como las de GitHub Actions) - no es un error HTTP, la
+    # respuesta es 200 OK pero con la lista vacía, probablemente por un
+    # filtro/anti-bot intermitente del lado de Binance. Un solo reintento
+    # rápido (la corrida completa dura ~15-30s, hay margen) resuelve la
+    # mayoría de esos casos sin esperar 15 minutos a la próxima corrida
+    # programada - que es lo que explicaba los huecos de varias horas en
+    # usdt_intraday_recent sin que el workflow apareciera como fallido.
+    prices, diag = [], ""
+    attempts = 3
+    for attempt in range(1, attempts + 1):
+        prices, diag = _query_binance_p2p()
+        if prices:
+            break
+        log(f"  ADVERTENCIA: Binance no devolvió anuncios para USDT/BOB ({diag}) "
+            f"- intento {attempt}/{attempts}.")
+        if attempt < attempts:
+            time.sleep(4)
     if not prices:
-        log("  ADVERTENCIA: Binance no devolvió anuncios para USDT/BOB - se omite.")
+        log("  Se agotaron los reintentos - se omite esta corrida.")
         return False
     prices.sort()
     median_price = prices[len(prices) // 2]
 
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = bolivia_today()
     usdt = data["usdt"]
     last = usdt[-1] if usdt else None
     if last and not sanity_ok(last["usdt_bob"], median_price, 0.25):
@@ -967,7 +1007,7 @@ def main():
             failures.append(name)
 
     if any_change:
-        data["meta"]["asof"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        data["meta"]["asof"] = bolivia_today()
         save_data(data)
         log("data.json actualizado y guardado.")
     else:
