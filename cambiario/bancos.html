@@ -572,7 +572,12 @@ function fmtDate(ds, withYear){
 
 /* ---------- Estado ---------- */
 const MAXSEL = 3;
-const state = {from:FIRST, to:LAST, gran:'dia', range:'mes', sel:new Set(), sort:{k:'m',dir:-1}};
+// Período inicial: "Mes en curso", salvo los primeros días del mes. Con menos de MIN_DIAS_MES
+// días con datos el mes en curso dice poco (un solo punto en los gráficos), así que abre en "1 mes".
+const MIN_DIAS_MES = 5;
+const DIAS_MES_EN_CURSO = DATA.dates.filter(d => d.slice(0,7) === LAST.slice(0,7)).length;
+const RANGO_INICIAL = DIAS_MES_EN_CURSO < MIN_DIAS_MES ? '30d' : 'mes';
+const state = {from:FIRST, to:LAST, gran:'dia', range:RANGO_INICIAL, sel:new Set(), sort:{k:'m',dir:-1}};
 const $ = id => document.getElementById(id);
 const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const MONO = "'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace";
