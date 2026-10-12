@@ -1,18 +1,11 @@
 {
-  "updated": "2026-10-10",
+  "updated": "2026-10-12",
   "items": [
     {
       "title": "El dólar oficial baja a Bs 11,73 para este fin de semana",
       "summary": "",
       "source": "Correo del Sur",
       "url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxOSWMzLVhJcTNuZTZpM0tmV1cwVWtudUJFbl9HbTN5X1BXekVTT2NVb0xXbnMxdC1aZklyQkQzLWdBU3dmak9ESlpvODAta1dIcGFwRkE1a2ZfR2JtbURWY0NRMnBFcC1Ock1OQnJpQW9zSE81Ymt0MEM2bUZCYjdFZzhRS0ZlT2VRV1VHeWNVNVFraHdrYTVpNGVadVZlU3ZZcm5YM2pOaw?oc=5",
-      "image": null
-    },
-    {
-      "title": "El Gobierno ratifica que primer desembolso del FMI se hará el miércoles",
-      "summary": "",
-      "source": "Opinión Bolivia",
-      "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxQbC1LbXVRMFo0RGxwMksxWjV0YkNBSk9Ral91S242VGEydnE2OWJfV2pHRUhKRTF5eVBUWUNxb1pWNExGdXNkYXhobm9ESkRsdmhUOWJfcUhJaVp0OHk4bEZEcW5FeG9ObE8zZ1g5NUMzODB6QVgwV3BYcXhjSm1MTE1YckQ3MGFuXzR1RHpCVUwtN2ZteU1wMmlCUkh1SmJ6dzJtMHdsZHM1WkxKemJ0NzU0Ty1WNkXSAbwBQVVfeXFMTWp3SDhvVVFWSHdxVjRSM291ZndfdG4wSHdNMkhVd2dkUXBfXzJzTUZWVnR2SVV2X1VpbVlBbU4yR2pWbm9hUzdyQWFZUWM4SGQxWWNkLVotY0tMdHFDbEh5QlNaMmtUTWV0Q29mbGQ2R2VjS1B2TmxNak5vOW1Vazk5aWtKOFYzRW9aTExhNkx0Q0Z0YWFBZWU4S0ZjZUlyU2cySUUzRHppMFFvR2wtbW92ZGdfcVQ4dWZpZEc?oc=5",
       "image": null
     },
     {
@@ -30,10 +23,17 @@
       "image": null
     },
     {
-      "title": "Dólar oficial baja a Bs 11,53 y acumula tercer día de caída desde el tope de Bs 12,64",
+      "title": "BCB venderá $us 35 millones a bancos a Bs 12,10 por dólar",
       "summary": "",
       "source": "Erbol |",
-      "url": "https://news.google.com/rss/articles/CBMiywFBVV95cUxOT1ZOeFNMTjh4aGxEa2dtOHdfZHJnRy1hMjNtY3pUb2JXUTZoN2dyVEdqZlhiZTVYbE9SLUxycE9ycTU2R2tVNWRNSF92ckNscy1kaDJMRk9aMXRDMk9wd1o3RGFhaEFaeUx4VzN1NEVMY0ZQZ0pyal9Bb3JrOEt1ZExtSlhWQXZLUG1RVTN2c3ZPM0xHR3BvT2M3ekZENkpUeTljTXUyVDY2Wk11a1ZtWUlqc08xQVVaNF9HTFIxSW9oZ1UyVEotVXpkZw?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxPWVBDQ0JpQUtnQ2NmWFVPdEVkWnJLdGZqWDlIODNDbzJyTnZCT0U1VWkwWWlsWkVYc3FvcnlOVTJZaXJwZks5VV9HWFJTbVhfOER3ZjBFWEJpNWRtUlZLUG5Bc01lLTZ5ZFV1N1FGNW10NXZrTndtT1hYXzJ2VjR5QTFFUUpIeFprNk01dHFYRUN5cFFJa0x5aUxkUF8?oc=5",
+      "image": null
+    },
+    {
+      "title": "Banco Central de Bolivia fija valor referencial del tipo de cambio del dólar en Bs 12,58",
+      "summary": "",
+      "source": "Opinión Bolivia",
+      "url": "https://news.google.com/rss/articles/CBMixwFBVV95cUxQcGhGOG9FTTVOR3pFT2lCTG9FZTFZY2pPRlQ4X3FnNHRHSVAyQzZnY3JFWlVYSXZRbTNKd2xzeHBFSGQwTGo2Z3NLdm00MWV4dDZhVHZNeWRtc2pycS1iVnZKcWFvVXdHTU05VXM5UFBMZFhBY2xjSEZ3NnlHTHhxYndSZVRjam96NFR4QzNENml5eDVIdk1wMjRPZGlwM2dYZEl5cm10b2YzcERLTkRHby1hdndCdUFxSjRsS19SdUlhOG5iSzlZ0gHMAUFVX3lxTE5GWjZHVUhXeTZpSHRSRkdVeVkwMW82TENkaFhQLVljSjNlQ29JS3NmYzJBWEtkNm8zdElUTnQtczc4bmN2SWlwcUFmUnkxSy1FUUptcS1salpsWDJfcTBIendrUjExM0pRcVg1ZjhaUUNHTnhSUXBZTHBfRGRPb1pBUVNpa1M1djYxZlFFQ2JnX3otNkllLUdVVzc3MjNhTWdPY1dTRW5PZ0FVSEhFMkhObkdteVkxNnJnb0RhWXh0c3BBUkYzSV9qZjdjZQ?oc=5",
       "image": null
     }
   ]
