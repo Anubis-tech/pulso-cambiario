@@ -2,24 +2,10 @@
   "updated": "2026-11-11",
   "items": [
     {
-      "title": "Bolivianos con dólares en Ueno cobrarán su dinero en guaraníes",
-      "summary": "",
-      "source": "El Deber",
-      "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQRVZZbW4tQk9pTEZKTDlYMDNuN3NsVzNEX0wzY09ZaTQyZ1A0WWFtdy0zNGxrcVltSTd0RXp2TnN1TU1QbnIzUVFMUm1SVEFNdnFqVGdMYkh0YV9aTS1rYkZOd25xRmhQa0gtTjZQUXY2WW1lSXJOTnJQM1lNTThkSjgtU0J4ZExwd2xRZ1R6YndOMmx4cVdV?oc=5",
-      "image": null
-    },
-    {
       "title": "Baja el dólar: Banco Central mantiene el tipo de cambio en Bs 11,73 este fin de semana",
       "summary": "",
       "source": "ABI - Agencia Boliviana de Información",
       "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxQYmN4M0YxQ3VPOVFtQTBrQkFTeEVmX3N6MEZqb1B6RW5CX1NFOXRIYnZTbWlJT1BmWlZiMjBzS0JyVWh0TVFQajFOOTNLWGJvX0NHRHotN256enFOTWNLV2w1cHJ1Wkc5djB3azJFVjh5N3NKSW56WTlzSEM5R1RlV184MGgxazNKa0N5WWxpbXgtSWRqRmlUTVVWR1Z5SHBHVWc?oc=5",
-      "image": null
-    },
-    {
-      "title": "BCB implementará nuevo método para calcular el tipo de cambio oficial",
-      "summary": "",
-      "source": "Los Tiempos",
-      "url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNYzFWR3R6azNNQlRXWk1vZFFPVmhsUlZHbnhzYlFyV2F3clpUZ2UtM3p3MzhaWEtDeXkzclBORWVBSUlHQkNiMi1RTDZnLU1TTHNZQjdhclhJZXU0d3pEN2JOc1hiTjlkcmwxUlhRTTlId0N4S09EelBQVlpmSDU4RmNJbGdSdzlIMlJUMFhpUU4xdVU3ZVRhMU4ycVBnWFEwc09IUFR2ZHRUWF9xcjhQemlFcmI?oc=5",
       "image": null
     },
     {
@@ -34,6 +20,20 @@
       "summary": "",
       "source": "Correo del Sur",
       "url": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxNblpIZEJwSlJIeWlfUlJ6MUs3ZFBqUnFjSG5udms5c1dKelU4bWtSVk9tQVJtUHp2N005dHc1TENMdFA5SzlJem9pRlRSWldsSWljWWtuclFyVkJrNXVSTVlNU21wZjZldXBjSk13ZGlOaUVXNGxBTTVZUVRtRWVXT0RiR0lzbEZPb2c1bXp3bDUwLWNWeWxpMlc5enQ2Y0hqSm16WGpEN1lEZzE4N1Npbm8xdFJFTF9CTzRLamF4VjZnSXdCclBjMw?oc=5",
+      "image": null
+    },
+    {
+      "title": "Banco Central de Bolivia fija valor referencial del tipo de cambio del dólar en Bs 12,58",
+      "summary": "",
+      "source": "Opinión Bolivia",
+      "url": "https://news.google.com/rss/articles/CBMixwFBVV95cUxQcGhGOG9FTTVOR3pFT2lCTG9FZTFZY2pPRlQ4X3FnNHRHSVAyQzZnY3JFWlVYSXZRbTNKd2xzeHBFSGQwTGo2Z3NLdm00MWV4dDZhVHZNeWRtc2pycS1iVnZKcWFvVXdHTU05VXM5UFBMZFhBY2xjSEZ3NnlHTHhxYndSZVRjam96NFR4QzNENml5eDVIdk1wMjRPZGlwM2dYZEl5cm10b2YzcERLTkRHby1hdndCdUFxSjRsS19SdUlhOG5iSzlZ0gHMAUFVX3lxTE5GWjZHVUhXeTZpSHRSRkdVeVkwMW82TENkaFhQLVljSjNlQ29JS3NmYzJBWEtkNm8zdElUTnQtczc4bmN2SWlwcUFmUnkxSy1FUUptcS1salpsWDJfcTBIendrUjExM0pRcVg1ZjhaUUNHTnhSUXBZTHBfRGRPb1pBUVNpa1M1djYxZlFFQ2JnX3otNkllLUdVVzc3MjNhTWdPY1dTRW5PZ0FVSEhFMkhObkdteVkxNnJnb0RhWXh0c3BBUkYzSV9qZjdjZQ?oc=5",
+      "image": null
+    },
+    {
+      "title": "BCB fija en Bs 12,12 el tipo de cambio oficial y anuncia medidas de política cambiaria",
+      "summary": "",
+      "source": "ABI - Agencia Boliviana de Información",
+      "url": "https://news.google.com/rss/articles/CBMiowFBVV95cUxNTVdhekd5Q0l5bEQ2SEhmNEd3NDN1c0E5ZUlqbzhiLV9NcXhBb2R3NHlubmFoV3Jrd0t2TVRvck9MZmVEZUtPWFJ5VTVfclB0QUp0R1hMU04zRGJaTzBxakxOYTFKSzlRalpfcVV4ZDlpYTk2cTgtTHVBcHZxbUJoNXRXYlFXU2cxcjBmQ21qRTJfSmhpVzdWYzhVLW9KOHJoMVBB?oc=5",
       "image": null
     }
   ]
