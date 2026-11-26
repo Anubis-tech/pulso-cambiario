@@ -1,27 +1,6 @@
 {
-  "updated": "2026-11-25",
+  "updated": "2026-11-26",
   "items": [
-    {
-      "title": "Colapso de las reservas: el alto costo de la irresponsabilidad",
-      "summary": "",
-      "source": "Correo del Sur",
-      "url": "https://news.google.com/rss/articles/CBMirAFBVV95cUxQRFBMUHFqYWExWnZ6NE9NbWxWTm1FT0VHTkJnVFNyU3hrblprcEJNTldPbzV3RHltX0RYYXoxLVB0dUs3djRNTFp3QXVPV2YwdnU4SEF3MjFyZjlaY3VGLTgzdXNZTFVJcF9xWkl4cWpTMFpwdTZFdXNZTi1RRVlNTXBRdmZIYWhYbEtxSFFyazVfcmlYU29jQ2JSQ3hUam81OW5SX0RzVHFPTzhR?oc=5",
-      "image": null
-    },
-    {
-      "title": "RIN: BCB prevé triplicar divisas en 2027",
-      "summary": "",
-      "source": "Correo del Sur",
-      "url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxQeXpQMjN0akFQOWdmZlQ4LTdYdS04Q0lkYV82MlpPYzJtb2xvdkctOHdDTUZyMm56SGFVVEFFZXpMbXRLbVlwdzItZHlkVE9IVUV1NF80UHhhcUhFX041VUI1YlNMWnhDaGIxcjE5T09UclNzeFhlaHlGX0xpUFV5WGVsbXd1TF9XRTBPbjU3MFU?oc=5",
-      "image": null
-    },
-    {
-      "title": "Banco Central quiere triplicar las reservas en divisas para el próximo año",
-      "summary": "",
-      "source": "Erbol |",
-      "url": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxPVENXLTFoaDZWOVczWGVDVzJYSlFNSGlOTUlydGt2YS1hUG45eTV2U3F4bk0wV3lGNW14blRrU0lWZnVjZTc3czd1T2ptT09tUm9pX3I2REVxZzhJbGlfa192ZElCdEZiRFJLcHNzOFJsTFdWQ01EUTBqVGVXd3p6ZGx6MTgtYjI5aWNWbjMtREIwT3N0SUktcnBOVXFpZGVBSTdaVVM3bXpHdDUydFVCckJZeDZYZFZ6Q0dnLWNORjk?oc=5",
-      "image": null
-    },
     {
       "title": "El boliviano es la moneda más depreciada del mundo frente al dólar en 2026, según Bloomberg",
       "summary": "",
@@ -30,10 +9,31 @@
       "image": null
     },
     {
-      "title": "Banco Central de Bolivia proyecta triplicar en 2027 reservas internacionales en divisas",
+      "title": "BCB fija el dólar en Bs 11,62 y registra octavo descenso consecutivo",
       "summary": "",
-      "source": "Correo del Sur",
-      "url": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNSkNFMmI3VGxWdE9BTHYxbV9BcTQ0SDktWDdmUi03QllhVlMxWm5xdVowQm44WjF3S1JNWnh2X3ktWGFGQTBtZGdvRzdpaW4wTGI3NDJ0LVM0dDdHWnNNM1JTTGVUY3VzR0pubXdkRzVWS3h1Y1dERC0wOUxsQU00RGRUWlZCNnppY0Fqc3c2a2hHeDZDOUFLM19iSi1oM1pRa1FyeHpmeWhEUW1aaWJvU1poSVRiakQwaW5XM1VsaW5SbDgxVnZNbUpOdWJ5U21k?oc=5",
+      "source": "ABI - Agencia Boliviana de Información",
+      "url": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxNelVuUURKLTBIb2FlemFvMmdwWDZkVWlnN1NFR2YyQURWRllZZWNxMVlxM1U1MU9Jeml0MnBzOVg0b2dKZ2pyQW1jRXRSZ1VfTWJocFZHQ0htRUFGM29nUFloUUpvNHotV1BtWWhxU21sNlAyQ1hRSTlhMDM5RVZzcWpYUW9GUWpxbTFJ?oc=5",
+      "image": null
+    },
+    {
+      "title": "Dólar baja 51 centavos y se cotizará en Bs 11,53 hasta el lunes",
+      "summary": "",
+      "source": "ABI - Agencia Boliviana de Información",
+      "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxOMGlQWDM2NWVNamkxYXBvWmhRZUpJdVlDZVlpRUFiRUFpSWlRclp5aV9uQnJ1YUxpVmNkby1WT3VZOUNxcGRhMG1XeHItSmw1M1NoYTJSdUVpaGlpdHNtNmYxMzRubEx2anFkVkdudll0NHowbEJ3YzYxNXJZOHBVUUlFdC0?oc=5",
+      "image": null
+    },
+    {
+      "title": "Con la nueva fórmula del BCB, el dólar oficial baja de Bs 12,22 a Bs 12,05",
+      "summary": "",
+      "source": "ABI - Agencia Boliviana de Información",
+      "url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxQckFwNjdQRmUxdjZXcWhDdVpnTGlsSXhYRjY3S3FkaDZ6UFhwemFyNEFjR2ROLTRXVFdkQlk3NllkZTFiWUF0X3RmQlNvc2U5aXdZUVZwekhoNy0zbW5qbzVYbWc2eW5iWDd0WEZjd3oyUE1XM0lhMXJ1V3lKZkJvZ1M0TFVZWFp0MUluQUMtb08?oc=5",
+      "image": null
+    },
+    {
+      "title": "Nueva normativa del BCB elimina límite de 10 centavos para la venta de dólares",
+      "summary": "",
+      "source": "ABI - Agencia Boliviana de Información",
+      "url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxObXV0TGt6MjFGcnNaNzJQMDVLb0E5dmx4WTJFb21LdlQ4RV9hQVlyZ3dVSmZ3WE1zNld5cEFCY0xYWmtFQS16ZE1rNzdrbjFEaGpzVHl1eHBDREZmU3JqNVM5MEo2di0wSmhfVnQybERoUUtVVVlIWTFITEt5VjRfVHFsRHk4Wlk4X0ZLelIya3REa1dMTzRUZmdB?oc=5",
       "image": null
     }
   ]
